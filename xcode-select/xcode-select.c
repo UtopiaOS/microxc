@@ -37,6 +37,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
+#include <stdbool.h>
+
 
 #define TOOL_VERSION "1.0.0"
 #define SDK_CFG ".xcdev.dat"
@@ -92,6 +95,38 @@ static int validate_directory_path(const char *dir)
 	return retval;
 }
 
+char* var_dev_symlink (const char* path){
+	struct stat buf;
+	int result;
+	int is_link;
+	char* symlink_name;
+	int errnum;
+	int did_readlink;
+	
+	const int bf_size_plus = buf.st_size + 1;
+
+	// The file is not a symlink
+	is_link = stat(path, &buf);
+	if (!S_ISLNK(buf.st_mode)) {
+		return NULL;
+	};
+
+	result = (lstat(path, &buf)  == 0); {
+		symlink_name = malloc(bf_size_plus);
+		did_readlink = readlink(path, symlink_name, bf_size_plus);
+		if (did_readlink != -1) {
+		symlink_name[buf.st_size] = '\0';
+		if (stat(symlink_name, &buf) == 0 ) {
+			// return what it points to
+			return symlink_name;
+		}
+		} else {
+			return NULL;
+		}
+	}
+	return NULL;
+}
+
 /**
  * @func get_developer_path -- retrieve current developer path
  * @return: string of current path on success, NULL string on failure
@@ -106,6 +141,8 @@ static char *get_developer_path(void)
 
 	if ((value = getenv("DEVELOPER_DIR")) != NULL)
 		return value;
+
+	if ((value = var_dev_symlink("/var/db/xcode_select_link")))
 
 	memset(devpath, 0, sizeof(devpath));
 
