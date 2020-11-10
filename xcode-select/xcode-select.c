@@ -100,26 +100,23 @@ char* var_dev_symlink (const char* path){
 	int result;
 	int is_link;
 	char* symlink_name;
-	int errnum;
 	int did_readlink;
 	
-	const int bf_size_plus = buf.st_size + 1;
-
 	// The file is not a symlink
 	is_link = stat(path, &buf);
-	if (!S_ISLNK(buf.st_mode)) {
+	if (S_ISLNK(buf.st_mode) != 0) {
 		return NULL;
 	};
 
 	result = (lstat(path, &buf)  == 0); {
-		symlink_name = malloc(bf_size_plus);
-		did_readlink = readlink(path, symlink_name, bf_size_plus);
+		symlink_name = malloc(buf.st_size + 1);
+		did_readlink = readlink(path, symlink_name, buf.st_size + 1);
 		if (did_readlink != -1) {
 		symlink_name[buf.st_size] = '\0';
 		if (stat(symlink_name, &buf) == 0 ) {
 			// return what it points to
 			return symlink_name;
-		}
+			}
 		} else {
 			return NULL;
 		}
@@ -139,10 +136,13 @@ static char *get_developer_path(void)
 	char *cfg_path = NULL;
 	char *value = NULL;
 
-	if ((value = getenv("DEVELOPER_DIR")) != NULL)
+	if ((value = getenv("DEVELOPER_DIR")) != NULL){
 		return value;
+	}
 
-	if ((value = var_dev_symlink("/var/db/xcode_select_link")))
+	if ((value = var_dev_symlink("/var/db/xcode_select_link")) != NULL){
+		return value;
+	}
 
 	memset(devpath, 0, sizeof(devpath));
 
