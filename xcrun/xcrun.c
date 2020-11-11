@@ -132,23 +132,6 @@ static int test_sdk_authenticity(const char *path)
 }
 
 /**
- * @func verbose_printf -- Print output to fp in verbose mode.
- * @arg fp - pointer to file (file, stderr, or stdio)
- * @arg str - string to print
- * @arg ... - additional arguments used
- */
-static void verbose_printf(FILE *fp, const char *str, ...)
-{
-	va_list args;
-
-	if (verbose_mode == 1) {
-		va_start(args, str);
-		vfprintf(fp, str, args);
-		va_end(args);
-	}
-}
-
-/**
  * @func logging_printf -- Print output to fp in logging mode.
  * @arg fp - pointer to file (file, stderr, or stdio)
  * @arg str - string to print
@@ -371,54 +354,6 @@ static default_config get_default_info(const char *path)
 		fprintf(stderr, "xcrun: error: failed to retrieve default info from '\%s\'. (errno=%s)\n", path, strerror(errno));
 		exit(1);
 	}
-}
-
-/**
- * @func get_developer_path -- retrieve current developer path
- * @return: string of current path on success, NULL string on failure
- */
-static char *get_developer_path(void)
-{
-	FILE *fp = NULL;
-	char devpath[PATH_MAX - 1];
-	char *pathtocfg = NULL;
-	char *cfg_path = NULL;
-	char *value = NULL;
-
-	verbose_printf(stdout, "xcrun: info: attempting to retrieve developer path from DEVELOPER_DIR...\n");
-
-	if ((value = getenv("DEVELOPER_DIR")) != NULL) {
-		verbose_printf(stdout, "xcrun: info: using developer path \'%s\' from DEVELOPER_DIR.\n", value);
-		return value;
-	}
-
-	bzero(devpath, (PATH_MAX - 1));
-
-	verbose_printf(stdout, "xcrun: info: attempting to retrieve developer path from configuration cache...\n");
-	if ((pathtocfg = getenv("HOME")) == NULL) {
-		fprintf(stderr, "xcrun: error: failed to read HOME variable.\n");
-		return NULL;
-	}
-
-	cfg_path = (char *)malloc((strlen(pathtocfg) + sizeof(SDK_CFG)));
-
-	sprintf(cfg_path, "%s/%s", pathtocfg, SDK_CFG);
-
-	if ((fp = fopen(cfg_path, "r")) != NULL) {
-		fseek(fp, 0, SEEK_SET);
-		(void)fread(devpath, (PATH_MAX - 1), 1, fp);
-		value = devpath;
-		fclose(fp);
-	} else {
-		fprintf(stderr, "xcrun: error: unable to read configuration cache. (errno=%s)\n", strerror(errno));
-		return NULL;
-	}
-
-	verbose_printf(stdout, "xcrun: info: using developer path \'%s\' from configuration cache.\n", value);
-
-	free(cfg_path);
-
-	return value;
 }
 
 /**
