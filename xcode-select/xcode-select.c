@@ -44,6 +44,8 @@
 #define TOOL_VERSION "1.0.0"
 #define SDK_CFG ".xcdev.dat"
 
+extern int errno;
+
 /**
  * @func usage -- Print helpful information about this tool.
  * @arg prog - name of this tool
@@ -182,14 +184,40 @@ static int set_developer_path(const char *path)
 	char *pathtocfg = NULL;
 	char *cfg_path = NULL;
 
+	int success; 
+
+	/* This tool normally, does a thing where it tries to set it on a config file at the home directory
+	* However, this isn't the way Apple does it, so what are we going to do?
+	* to keep compat with this legacy code, what we are gonna do is the following:
+	* - Check if we can create a file in /var/db/xcode_select_link
+	* - If we fail, we fallback to this legacy code but notify the user, that they might want to elevante privs
+	* - If everything was successfull lets just return 0 so we don't execute the legacy code.
+	*/ 
+
+	success = symlink(path, "/var/db/xcode_select_link");
+	if (success != 0) {
+		if (errno == EEXIST) {
+			int did_unlink;
+			did_unlink = unlink("/var/db/xcode_select_link");
+			if (did_unlink != 0){
+				fprintf(stderr,"xcode-select: warning: The following error ocurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
+			}
+			symlink(path, "/var/db/xcode_select_link");
+			return 0;
+		}
+		fprintf(stderr, "xcode-select: warning: The following error ocurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
+	} else {
+		return 0;
+	}
+
 	if ((pathtocfg = getenv("HOME")) == NULL) {
 		fprintf(stderr, "xcode-select: error: failed to read HOME variable.\n");
 		return -1;
 	}
 
-        cfg_path = (char *)malloc((strlen(pathtocfg) + sizeof(SDK_CFG)));
+    cfg_path = (char *)malloc((strlen(pathtocfg) + sizeof(SDK_CFG)));
 
-        strcat(pathtocfg, "/");
+    strcat(pathtocfg, "/");
 	strcat(cfg_path, strcat(pathtocfg, SDK_CFG));
 
 	if ((fp = fopen(cfg_path, "w+")) != NULL) {
