@@ -1,2 +1,2 @@
 
-static char* get_developer_path(void);
+char* get_developer_path(void);

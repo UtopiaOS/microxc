@@ -42,7 +42,8 @@
 #include <sys/types.h>
 
 #include "ini.h"
-#include "lib/developer_path.h"
+#include "developer_path.h"
+#include "verbose_printf.h"
 
 /* General stuff */
 #define TOOL_VERSION "1.0.0"

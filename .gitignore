@@ -51,8 +51,10 @@ m4/lt~obsolete.m4
 Makefile
 
 # Libraries generated at compile time
-libmicroxcode.la
-libmicroxcode_la-developer_path.lo
+*.la
+*.lo
 *.o
 libtool
 .libs
+XcodeSelect
+xcrun

@@ -43,7 +43,7 @@ char* var_dev_symlink (const char* path){
  * @func get_developer_path -- retrieve current developer path
  * @return: string of current path on success, NULL string on failure
  */
-static char *get_developer_path(void)
+char *get_developer_path(void)
 {
 	FILE *fp = NULL;
 	char devpath[PATH_MAX - 1];
