@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include "lib/developer_path.h"
 
 
 #define TOOL_VERSION "1.0.0"
