@@ -1,5 +1,5 @@
-bin_PROGRAMS = xcode-select
+bin_PROGRAMS = xcodeSelect
 
-xcode-select_SOURCES = xcode-select.c
-xcode-select_CFLAGS = -I$(top_srcdir)/lib -Wall -Werror -O2
-xcode-select_LDADD = $(top_builddir)/lib/libmicroxcode.la -lSystem
+xcodeSelect_SOURCES = xcode-select.c
+xcodeSelect_CFLAGS = -I$(top_srcdir)/lib -Wall -Werror -O2
+xcodeSelect_LDADD = $(top_builddir)/lib/libmicroxcode.la -lSystem

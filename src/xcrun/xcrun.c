@@ -42,6 +42,7 @@
 #include <sys/types.h>
 
 #include "ini.h"
+#include "lib/developer_path.h"
 
 /* General stuff */
 #define TOOL_VERSION "1.0.0"
