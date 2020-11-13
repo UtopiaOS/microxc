@@ -47,6 +47,7 @@
 #include "verbose_printf.h"
 #include "typedefs.h"
 #include "config_hadler.h"
+#include "parsers.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -203,34 +204,6 @@ static int validate_directory_path(const char *dir)
 }
 
 
-NSDictionary*
-plist_parse_toolchain(NSURL *target_file_path) {
-
-    NSData *data_of_path = [NSData dataWithContentsOfURL:target_file_path];
-    NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_path
-                                      options:NSPropertyListMutableContainers format:NULL error: NULL];
-
-    // Canonical name normally comes with an iOS version say:
-    // iPhoneOS14.2 we dont need the 14.2. So we use this technique to remove it
-    NSString *canonical_name = parse_plist_dict[@"CanonicalName"];
-
-    NSString *final_canon = [[canonical_name
-                              componentsSeparatedByCharactersInSet:[[NSCharacterSet letterCharacterSet] invertedSet]]
-                             componentsJoinedByString:@""];
-
-    NSString *version = parse_plist_dict[@"DefaultDeploymentTarget"];
-
-    NSDictionary *our_dict = [NSDictionary alloc];
-
-    our_dict = @{
-            @"version" : version,
-            @"name" : final_canon
-    };
-
-    return our_dict;
-
-}
-
 static toolchain_config get_toolchain_info(const char *path)
 {
 	toolchain_config config;
@@ -244,7 +217,9 @@ static toolchain_config get_toolchain_info(const char *path)
 
 	info_path = [NSURL fileURLWithPath:final_path];
 
-	NSDictionary *dictSession = plist_parse_toolchain(info_path);
+	NSString *target_sdk = [NSString stringWithCString:current_sdk encoding:NSUTF8StringEncoding];
+
+	NSDictionary *dictSession = plist_parse(info_path, target_sdk);
 
 	const char *version_char = [[dictSession valueForKey:@"version"] UTF8String];
 	const char *name_char = [[dictSession valueForKey:@"name"] UTF8String];
@@ -253,17 +228,6 @@ static toolchain_config get_toolchain_info(const char *path)
 	config.name = name_char;
 
 	return config;
-
-}
-
-NSDictionary*
-plist_parse_sdk(NSURL targetFilePath) {
-    NSData *data_of_path = [NSData dataWithContentsOfURL:target_file_path];
-
-    NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_path
-                                                                               options:NSPropertyListMutableContainers format:NULL error: NULL];
-
-
 
 }
 
