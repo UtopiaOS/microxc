@@ -77,7 +77,7 @@ static void version(void)
 }
 
 /**
- * @func validate_directory_path -- validate if requested directory path exists
+ * @func validate_directory_path -- validate if requested directory path exists and if it contains a valid required files
  * @arg dir - directory to validate
  * @return: 0 on success, 1 on failure
  */
@@ -115,8 +115,8 @@ static int set_developer_path(const char *path)
 	* However, this isn't the way Apple does it, so what are we going to do?
 	* to keep compat with this legacy code, what we are gonna do is the following:
 	* - Check if we can create a file in /var/db/xcode_select_link
-	* - If we fail, we fallback to this legacy code but notify the user, that they might want to elevante privs
-	* - If everything was successfull lets just return 0 so we don't execute the legacy code.
+	* - If we fail, we fallback to this legacy code but notify the user, that they might want to elevate privileges
+	* - If everything was successful lets just return 0 so we don't execute the legacy code.
 	*/ 
 
 	success = symlink(path, "/var/db/xcode_select_link");
@@ -125,14 +125,12 @@ static int set_developer_path(const char *path)
 			int did_unlink;
 			did_unlink = unlink("/var/db/xcode_select_link");
 			if (did_unlink != 0){
-				fprintf(stderr,"xcode-select: warning: The following error ocurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
+				fprintf(stderr,"xcode-select: warning: The following error occurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
 			}
 			symlink(path, "/var/db/xcode_select_link");
 			return 0;
 		}
-		fprintf(stderr, "xcode-select: warning: The following error ocurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
-	} else {
-		return 0;
+		fprintf(stderr, "xcode-select: warning: The following error occurred when trying to symlink: %s, this might be because you are not root! Will fallback to default code. In case you wish to handle this operation re-run this program as root!.\n", strerror(errno));
 	}
 
 	if ((pathtocfg = getenv("HOME")) == NULL) {

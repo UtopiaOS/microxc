@@ -58,3 +58,4 @@ libtool
 .libs
 XcodeSelect
 xcrun
+.idea/*
