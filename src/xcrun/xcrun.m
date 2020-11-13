@@ -131,7 +131,7 @@ static int test_sdk_authenticity(const char *path)
 
 	fname = (char *)malloc(PATH_MAX - 1);
 
-	sprintf(fname, "%s/info.ini", path);
+	sprintf(fname, "%s/SDKSettings.plist", path);
 	if (access(fname, F_OK) != (-1))
 		retval = 1;
 
@@ -225,28 +225,6 @@ static int validate_directory_path(const char *dir)
 }
 
 /**
- * @func toolchain_cfg_handler -- handler used to process toolchain info.ini contents
- * @arg user - ini user pointer (see ini.h)
- * @arg section - ini section name (see ini.h)
- * @arg name - ini variable name (see ini.h)
- * @arg value - ini variable value (see ini.h)
- * @return: 1 on success, 0 on failure
- */
-static int toolchain_cfg_handler(void *user, const char *section, const char *name, const char *value)
-{
-	toolchain_config *config = (toolchain_config *)user;
-
-	if (MATCH_INI_STON("TOOLCHAIN", "name"))
-		config->name = strdup(value);
-	else if (MATCH_INI_STON("TOOLCHAIN", "version"))
-		config->version = strdup(value);
-	else
-		return 0;
-
-	return 1;
-}
-
-/**
  * @func sdk_cfg_handler -- handler used to process sdk info.ini contents
  * @arg user - ini user pointer (see ini.h)
  * @arg section - ini section name (see ini.h)
@@ -307,22 +285,61 @@ static int default_cfg_handler(void *user, const char *section, const char *name
  * @arg path - path to toolchain's info.ini
  * @return: struct containing toolchain config info
  */
+
+
+
+NSDictionary*
+plist_parse(NSURL *target_file_path) {
+
+    NSData *data_of_path = [NSData dataWithContentsOfURL:target_file_path];
+    NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_path
+                                      options:NSPropertyListMutableContainers format:NULL error: NULL];
+
+    // Canonical name normally comes with an iOS version say:
+    // iPhoneOS14.2 we dont need the 14.2. So we use this technique to remove it
+    NSString *canonical_name = parse_plist_dict[@"CanonicalName"];
+
+    NSString *final_canon = [[canonical_name
+                              componentsSeparatedByCharactersInSet:[[NSCharacterSet letterCharacterSet] invertedSet]]
+                             componentsJoinedByString:@""];
+
+    NSString *version = parse_plist_dict[@"DefaultDeploymentTarget"];
+
+    NSDictionary *our_dict = [NSDictionary alloc];
+
+    our_dict = @{
+            @"version" : version,
+            @"name" : final_canon
+    };
+
+    return our_dict;
+
+}
+
 static toolchain_config get_toolchain_info(const char *path)
 {
 	toolchain_config config;
-	char *info_path = NULL;
+	NSURL *info_path;
 
-	info_path = (char *)malloc(PATH_MAX - 1);
-	sprintf(info_path, "%s/info.ini", path);
+	// lets handle the conversion from a CString to an NSString
+	NSString *initial_path = [NSString stringWithCString:path encoding:NSUTF8StringEncoding];
+	NSString *final_path = [NSString stringWithFormat:@"%@/SDKSettings.plist", initial_path];
 
-	if (ini_parse(info_path, toolchain_cfg_handler, &config) != (-1)) {
-		free(info_path);
-		return config;
-	} else {
-		fprintf(stderr, "xcrun: error: failed to retrieve toolchain info from '\%s\'. (errno=%s)\n", info_path, strerror(errno));
-		free(info_path);
-		exit(1);
-	}
+	free(initial_path);
+
+	info_path = [NSURL fileURLWithPath:final_path];
+
+	NSDictionary *dictSession = plist_parse(info_path);
+
+	const char *version_char = [[dictSession valueForKey:@"version"] UTF8String];
+	const char *name_char = [[dictSession valueForKey:@"name"] UTF8String];
+
+	config.version = version_char;
+	config.name = name_char;
+
+	return config;
+
+
 }
 
 /**
@@ -1057,37 +1074,6 @@ static int get_multicall_state(const char *cmd, const char *state[], int state_s
 	}
 
 	return -1;
-}
-
-const NSDictionary*
-parse_plist(NSString* path, NSString* platform) {
-
-    NSString *initialPath = [NSString stringWithFormat:@"%@/SDKSettings.plist", path];
-
-	NSData *plist_generated_path = [NSData dataWithContentsOfURL:[NSURL fileURLWithPath:initialPath]];
-	NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:plist_generated_path options:
-	        NSPropertyListMutableContainers format:NULL error: NULL];
-    //sdk_config sdk_configuration;
-
-    // lets the name first so its easier to descend into more levels of the plist
-    NSString *canonical_name = parse_plist_dict[@"CanonicalName"];
-
-    // next step lets split the string divided by the number, we dont want the 1x.whatever
-    NSArray *array_of_components = [canonical_name componentsSeparatedByString:@"1"];
-    canonical_name = array_of_components[0];
-
-    // we dont need it anymore
-    free(array_of_components);
-
-    // next lets get our Supported targets
-
-    return parse_plist_dict;
-
-
-
-    // lets go with arm64 for now, as this primarily targets Jailbroken devices
-    // for Mac I will go with x86_64 until I get an ARM Mac, until then x86_64 only!
-
 }
 
 int main(int argc, char *argv[])

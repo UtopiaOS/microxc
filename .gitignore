@@ -57,5 +57,4 @@ Makefile
 libtool
 .libs
 XcodeSelect
-xcrun
 .idea/*
