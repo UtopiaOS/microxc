@@ -2,7 +2,7 @@
 // Created by Diego Magdaleno on 11/13/20.
 //
 
-#include "config_hadler.h"
+#include "config_handler.h"
 #include <TargetConditionals.h>
 #include <stdio.h>
 #include <stdlib.h>

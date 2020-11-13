@@ -12,20 +12,21 @@ plist_parse(NSURL *target_plist_path, NSString *target_name)
     NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_file
     options:NSPropertyListMutableContainers format:NULL error:NULL];
 
-    NSString *canonical_name = [[parse_plist_dict valueForKey:@"CanonicalName"]
-                                componentsSeparatedByCharactersInSet:[[NSChracter letterCharacterSet]invertedSet]
+    NSString *canonical_name = [[[parse_plist_dict valueForKey:@"CanonicalName"] componentsSeparatedByCharactersInSet:[[NSCharacterSet letterCharacterSet]invertedSet]]
                                 componentsJoinedByString:@""];
 
     NSString *version = [parse_plist_dict valueForKey:@"DefaultDeploymentTarget"];
 
     // this is getting hardcoded until I refactor the code a little bit more
-    NSString *toolchain = "XcodeDefault";
+    NSString *toolchain = @"XcodeDefault";
 
-    NSDictionary *supported_targets_defaults = [[parse_plist_dict valueForKey@"SupportedTargets"] valueForKey:target_name];
+
+    NSDictionary *supported_targets_defaults = [[parse_plist_dict valueForKey:@"SupportedTargets"] valueForKey:[target_name lowercaseString]];
 
     NSString *deployment_target = [supported_targets_defaults valueForKey:@"DefaultDeploymentTarget"];
 
-    NSString *architecture = [supported_targets_defaults valueForKey:@"Archs"][0];
+    NSArray *architectures = [supported_targets_defaults valueForKey:@"Archs"];
+    NSString *architecture = architectures[0];
 
     NSDictionary *our_dict = [NSDictionary alloc];
 

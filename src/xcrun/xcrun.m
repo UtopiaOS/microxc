@@ -46,7 +46,7 @@
 #include "developer_path.h"
 #include "verbose_printf.h"
 #include "typedefs.h"
-#include "config_hadler.h"
+#include "config_handler.h"
 #include "parsers.h"
 
 // Obj-c
@@ -239,19 +239,27 @@ static toolchain_config get_toolchain_info(const char *path)
 static sdk_config get_sdk_info(const char *path)
 {
 	sdk_config config;
-	char *info_path = NULL;
+	NSURL *info_path;
 
-	info_path = (char *)malloc(PATH_MAX - 1);
-	sprintf(info_path, "%s/info.ini", path);
+	NSString *initial_path = [NSString stringWithCString:path encoding:NSUTF8StringEncoding];
+	NSString *final_path = [NSString stringWithFormat:@"%@/SDKSettings.plist", initial_path];
 
-	if (ini_parse(info_path, sdk_cfg_handler, &config) != (-1)) {
-		free(info_path);
-		return config;
-	} else {
-		fprintf(stderr, "xcrun: error: failed to retrieve sdk info from '\%s\'. (errno=%s)\n", info_path, strerror(errno));
-		free(info_path);
-		exit(1);
-	}
+	free(initial_path);
+
+	info_path = [NSURL fileURLWithPath:final_path];
+
+	NSString *target_sdk = [NSString stringWithCString:current_sdk encoding:NSUTF8StringEncoding];
+
+	NSDictionary *dict_session = plist_parse(info_path, target_sdk);
+
+	config.version = [[dict_session valueForKey:@"version"] UTF8String];
+	config.name = [[dict_session valueForKey:@"name"] UTF8String];
+	config.default_arch = [[dict_session valueForKey:@"arch"] UTF8String];
+	config.deployment_target = [[dict_session valueForKey:@"deployment_target"] UTF8String];
+	config.toolchain = [[dict_session valueForKey:@"toolchain"] UTF8String];
+
+	return config;
+
 }
 
 /**
