@@ -813,11 +813,9 @@ int main(int argc, char *argv[])
 			retval = xcrun_main(argc, argv);
 			break;
 		case 2: /* xcrun_log */
-			logging_mode = 1;
 			retval = xcrun_main(argc, argv);
 			break;
 		case 3: /* xcrun_verbose */
-			verbose_mode = 1;
 			retval = xcrun_main(argc, argv);
 			break;
 		case 4: /* xcrun_nocache */
