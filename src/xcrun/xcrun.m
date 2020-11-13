@@ -45,6 +45,7 @@
 
 #include "developer_path.h"
 #include "verbose_printf.h"
+#include "typedefs.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -55,27 +56,6 @@
 #define TOOL_VERSION "1.0.0"
 #define SDK_CFG ".xcdev.dat"
 #define XCRUN_DEFAULT_CFG "/etc/xcrun.ini"
-
-/* Toolchain configuration struct */
-typedef struct {
-	const char *name;
-	const char *version;
-} toolchain_config;
-
-/* SDK configuration struct */
-typedef struct {
-	const char *name;
-	const char *version;
-	const char *toolchain;
-	const char *default_arch;
-	const char *deployment_target;
-} sdk_config;
-
-/* xcrun default configuration struct */
-typedef struct {
-	const char *sdk;
-	const char *toolchain;
-} default_config;
 
 /* Output mode flags */
 static int logging_mode = 0;
@@ -222,69 +202,6 @@ static int validate_directory_path(const char *dir)
 
 	return retval;
 }
-
-/**
- * @func sdk_cfg_handler -- handler used to process sdk info.ini contents
- * @arg user - ini user pointer (see ini.h)
- * @arg section - ini section name (see ini.h)
- * @arg name - ini variable name (see ini.h)
- * @arg value - ini variable value (see ini.h)
- * @return: 1 on success, 0 on failure
- */
-static int sdk_cfg_handler(void *user, const char *section, const char *name, const char *value)
-{
-	sdk_config *config = (sdk_config *)user;
-
-	if (MATCH_INI_STON("SDK", "name"))
-		config->name = strdup(value);
-	else if (MATCH_INI_STON("SDK", "version"))
-		config->version = strdup(value);
-	else if (MATCH_INI_STON("SDK", "toolchain"))
-		config->toolchain = strdup(value);
-	else if (MATCH_INI_STON("SDK", "default_arch"))
-		config->default_arch = strdup(value);
-	else if (MATCH_INI_STON("SDK", "ios_deployment_target")) {
-		ios_deployment_target_set = 1;
-		macosx_deployment_target_set = 0;
-		config->deployment_target = strdup(value);
-	} else if (MATCH_INI_STON("SDK", "macosx_deployment_target")) {
-		ios_deployment_target_set = 0;
-		macosx_deployment_target_set = 1;
-		config->deployment_target = strdup(value);
-	} else
-		return 0;
-
-	return 1;
-}
-
-/**
- * @func default_cfg_handler -- handler used to process xcrun's xcrun.ini contents
- * @arg user - ini user pointer (see ini.h)
- * @arg section - ini section name (see ini.h)
- * @arg name - ini variable name (see ini.h)
- * @arg value - ini variable value (see ini.h)
- * @return: 1 on success, 0 on failure
- */
-static int default_cfg_handler(void *user, const char *section, const char *name, const char *value)
-{
-	default_config *config = (default_config *)user;
-
-	if (MATCH_INI_STON("SDK", "name"))
-		config->sdk = strdup(value);
-	else if (MATCH_INI_STON("TOOLCHAIN", "name"))
-		config->toolchain = strdup(value);
-	else
-		return 0;
-
-	return 1;
-}
-
-/**
- * @func get_toolchain_info -- fetch config info from a toolchain's info.ini
- * @arg path - path to toolchain's info.ini
- * @return: struct containing toolchain config info
- */
-
 
 
 NSDictionary*
