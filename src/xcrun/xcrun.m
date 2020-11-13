@@ -164,7 +164,6 @@ static void usage(void)
 #endif
 		"  --show-sdk-path              show selected SDK install path\n"
 		"  --show-sdk-version           show selected SDK version\n"
-		"  --show-sdk-target-triple     show selected SDK target triple\n"
 		"  --show-sdk-toolchain-path    show selected SDK toolchain path\n"
 		"  --show-sdk-toolchain-version show selected SDK toolchain version\n\n"
 		, progname);
@@ -321,131 +320,6 @@ static char *get_sdk_path(const char *name)
 }
 
 /**
- * @func parse_target_triple -- Generate target triple by parsing iOS/MacOSX version and cpu architecture
- * @arg triple - buffer to place the target triple
- * @arg ver - Mac OSX or iOS version
- * @arg arch - Mac OSX or iOS cpu architecture
- */
-static void parse_target_triple(char *triple, const char *ver, const char *arch)
-{
-	int where = 1;
-	int xx, yy, zz, ch, kern_ver;
-
-	if (ver == NULL)
-		return;
-
-	xx = yy = zz = 0;
-
-	do {
-		ch = (int)*ver;
-
-		switch (ch) {
-			case '9':
-			case '8':
-			case '7':
-			case '6':
-			case '5':
-			case '4':
-			case '3':
-			case '2':
-			case '1':
-			case '0':
-				{
-					switch (where) {
-						case 1: /* major */
-							xx *= 10;
-							xx += (ch - '0');
-							break;
-						case 2: /* minor */
-							yy *= 10;
-							yy += (ch - '0');
-							break;
-						case 3: /* patch */
-							zz *= 10;
-							zz += (ch - '0');
-						default:
-							break;
-					}
-					break;
-				}
-			case '.':
-			default:
-				where++;
-				break;
-		}
-	} while (*ver++ != '\0');
-
-	switch (xx) {
-		case 10:
-			kern_ver = (yy + 4);
-			break;
-		case 9:
-		case 8:
-			kern_ver = 14;
-			break;
-		case 7:
-			kern_ver = 14;
-			break;
-		case 6:
-			kern_ver = 13;
-			break;
-		case 5:
-			kern_ver = 11;
-			break;
-		case 4:
-			{
-				if (yy <= 2)
-					kern_ver = 10;
-				else
-					kern_ver = 11;
-				break;
-			}
-		case 3:
-			kern_ver = 10;
-			break;
-		case 2:
-			kern_ver = 9;
-			break;
-		case 1:
-		default:
-			kern_ver = 9;
-			break;
-	}
-
-	sprintf(triple, "%s-apple-darwin%d", arch, kern_ver);
-
-	return;
-}
-
-/**
- * @func get_target_triple -- get the target triple for the current sdk.
- * @arg current_sdk - specified sdk (ignored if TARGET_TRIPLE env variable is set)
- * @return: target triple string or NULL on error
- */
-static char *get_target_triple(const char *current_sdk)
-{
-	char *triple = NULL;
-	char *default_arch = NULL;
-	char *deployment_target = NULL;
-
-	if ((triple = getenv("TARGET_TRIPLE")) != NULL)
-		return triple;
-	else {
-		triple = (char *)malloc(64);
-
-		if ((default_arch = strdup(get_sdk_info(get_sdk_path(current_sdk)).default_arch)) == NULL)
-			return NULL;
-
-		if ((deployment_target = strdup(get_sdk_info(get_sdk_path(current_sdk)).deployment_target)) == NULL)
-			return NULL;
-
-		parse_target_triple(triple, deployment_target, default_arch);
-
-		return triple;
-	}
-}
-
-/**
  * @func call_command -- Execute new process to replace this one.
  * @arg cmd - program's absolute path
  * @arg argc - number of arguments to be passed to new process
@@ -456,7 +330,6 @@ static int call_command(const char *cmd, int argc, char *argv[])
 {
 	int i;
 	char *envp[7] = { NULL };
-	char *target_triple = NULL;
 	char *deployment_target = NULL;
 
 	/*
@@ -474,23 +347,19 @@ static int call_command(const char *cmd, int argc, char *argv[])
 	envp[1] = (char *)malloc(PATH_MAX - 1);
 	envp[2] = (char *)malloc(PATH_MAX - 1);
 	envp[3] = (char *)malloc(PATH_MAX - 1);
-	envp[4] = (char *)malloc(64);
-	envp[5] = (char *)malloc(255);
+	envp[4] = (char *)malloc(255);
 
 	sprintf(envp[0], "SDKROOT=%s", get_sdk_path(current_sdk));
 	sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_dir, get_toolchain_path(current_toolchain), getenv("PATH"));
 	sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(current_toolchain));
 	sprintf(envp[3], "HOME=%s", getenv("HOME"));
 
-	if ((target_triple = get_target_triple(current_sdk)) != NULL)
-		sprintf(envp[4], "TARGET_TRIPLE=%s", target_triple);
-	else
-		fprintf(stderr, "xcrun: warning: failed to retrieve target triple information for %s.sdk.\n", current_sdk);
+
 
 	if ((deployment_target = getenv("IOS_DEPLOYMENT_TARGET")) != NULL)
-		sprintf(envp[5], "IOS_DEPLOYMENT_TARGET=%s", deployment_target);
+		sprintf(envp[4], "IOS_DEPLOYMENT_TARGET=%s", deployment_target);
 	else if ((deployment_target = getenv("MACOSX_DEPLOYMENT_TARGET")) != NULL)
-		sprintf(envp[5], "MACOSX_DEPLOYMENT_TARGET=%s", deployment_target);
+		sprintf(envp[4], "MACOSX_DEPLOYMENT_TARGET=%s", deployment_target);
 	else {
 		/* Use the deployment target info that is provided by the SDK. */
 		if ((deployment_target = strdup(get_sdk_info(get_sdk_path(current_sdk)).deployment_target)) != NULL) {
@@ -666,8 +535,8 @@ static int xcrun_main(int argc, char *argv[])
 	char *sdk_env = NULL;
 	char *toolchain_env = NULL;
 
-	static int help_f, verbose_f, log_f, find_f, run_f, nocache_f, killcache_f, version_f, sdk_f, toolchain_f, ssdkp_f, ssdkv_f, ssdkpp_f, ssdktt_f, ssdkpv_f;
-	help_f = verbose_f = log_f = find_f = run_f = nocache_f = killcache_f = version_f = sdk_f = toolchain_f = ssdkp_f = ssdkv_f = ssdkpp_f = ssdktt_f = ssdkpv_f = 0;
+	static int help_f, verbose_f, log_f, find_f, run_f, nocache_f, killcache_f, version_f, sdk_f, toolchain_f, ssdkp_f, ssdkv_f, ssdkpp_f, ssdkpv_f;
+	help_f = verbose_f = log_f = find_f = run_f = nocache_f = killcache_f = version_f = sdk_f = toolchain_f = ssdkp_f = ssdkv_f = ssdkpp_f = ssdkpv_f = 0;
 
 	/* Supported options */
 	static struct option options[] = {
@@ -683,7 +552,6 @@ static int xcrun_main(int argc, char *argv[])
 		{ "kill-cache", no_argument, 0, 'k' },
 		{ "show-sdk-path", no_argument, &ssdkp_f, 1 },
 		{ "show-sdk-version", no_argument, &ssdkv_f, 1 },
-		{ "show-sdk-target-triple", no_argument, &ssdktt_f, 1},
 		{ "show-sdk-toolchain-path", no_argument, &ssdkpp_f, 1 },
 		{ "show-sdk-toolchain-version", no_argument, &ssdkpv_f, 1 },
 		{ NULL, 0, 0, 0 }
@@ -855,12 +723,6 @@ static int xcrun_main(int argc, char *argv[])
 	/* Show SDK toolchain version? */
 	if (ssdkpv_f == 1) {
 		printf("%s SDK Toolchain version %s (%s)\n", get_sdk_info(get_sdk_path(current_sdk)).name, get_toolchain_info(get_toolchain_path(current_toolchain)).version, get_toolchain_info(get_toolchain_path(current_toolchain)).name);
-		exit(0);
-	}
-
-	/* Show SDK target triple ? */
-	if (ssdktt_f == 1) {
-		printf("%s\n", get_target_triple(current_sdk));
 		exit(0);
 	}
 
