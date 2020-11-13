@@ -46,6 +46,7 @@
 #include "developer_path.h"
 #include "verbose_printf.h"
 #include "typedefs.h"
+#include "config_hadler.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -54,8 +55,6 @@
 
 /* General stuff */
 #define TOOL_VERSION "1.0.0"
-#define SDK_CFG ".xcdev.dat"
-#define XCRUN_DEFAULT_CFG "/etc/xcrun.ini"
 
 /* Output mode flags */
 static int logging_mode = 0;
@@ -287,23 +286,6 @@ static sdk_config get_sdk_info(const char *path)
 	} else {
 		fprintf(stderr, "xcrun: error: failed to retrieve sdk info from '\%s\'. (errno=%s)\n", info_path, strerror(errno));
 		free(info_path);
-		exit(1);
-	}
-}
-
-/**
- * @func get_default_info -- fetch default configuration for xcrun
- * @arg path - path to xcrun.ini
- * @return: struct containing default config info
- */
-static default_config get_default_info(const char *path)
-{
-	default_config config;
-
-	if (ini_parse(path, default_cfg_handler, &config) != (-1))
-		return config;
-	else {
-		fprintf(stderr, "xcrun: error: failed to retrieve default info from '\%s\'. (errno=%s)\n", path, strerror(errno));
 		exit(1);
 	}
 }
@@ -596,25 +578,6 @@ static char *search_command(const char *name, char *dirs)
 	return cmd;
 }
 
-char* get_current_platform_sdk() {
-    char *sdk_supposed_path;
-		#if TARGET_OS_IPHONE //Both iPhone and iPad
-			// TODO: Add checks to see if dir is empty
-			sdk_suppossed_path = "iPhoneOS";
-			return sdk_supposed_path;
-        #elif TARGET_OS_MAC
-			sdk_supposed_path = "MacOSX";
-			return sdk_supposed_path;
-        #else
-			return NULL;
-		#endif
-}
-
-
-char* get_current_platform_toolchain() {
-    return "XcodeDefault";
-}
-
 /**
  * @func request_command - Request a program.
  * @arg name -- name of program
@@ -638,10 +601,8 @@ static int request_command(const char *name, int argc, char *argv[])
 		current_sdk = (char *)malloc(255);
 		if ((sdk_env = getenv("SDKROOT")) != NULL)  {
 			stripext(current_sdk, basename(sdk_env));
-		} else if (get_current_platform_sdk() != NULL) {
-			current_sdk = get_current_platform_sdk();
 		} else {
-			current_sdk = strdup(get_default_info(XCRUN_DEFAULT_CFG).sdk);
+			current_sdk = strdup(get_default_info().sdk);
 		}	
 	}
 
@@ -649,10 +610,8 @@ static int request_command(const char *name, int argc, char *argv[])
 		current_toolchain = (char *)malloc(255);
 		if ((toolchain_env = getenv("TOOLCHAINS")) != NULL) {
             stripext(current_toolchain, basename(toolchain_env));
-		} else if (get_current_platform_toolchain() != NULL) {
-		    current_toolchain = get_current_platform_toolchain();
 		} else {
-		    current_toolchain = strdup(get_default_info(XCRUN_DEFAULT_CFG).toolchain);
+		    current_toolchain = strdup(get_default_info().toolchain);
         }
 	}
 
@@ -891,20 +850,16 @@ static int xcrun_main(int argc, char *argv[])
 		current_sdk = (char *)malloc(255);
 		if ((sdk_env = getenv("SDKROOT")) != NULL)
 			stripext(current_sdk, basename(sdk_env));
-		else if (get_current_platform_sdk() != NULL)
-		    current_sdk = get_current_platform_sdk();
 		else
-			current_sdk = strdup(get_default_info(XCRUN_DEFAULT_CFG).sdk);
+			current_sdk = strdup(get_default_info().sdk);
 	}
 
 	if (current_toolchain == NULL) {
 		current_toolchain = (char *)malloc(255);
 		if ((toolchain_env = getenv("TOOLCHAINS")) != NULL)
 			stripext(current_toolchain, basename(toolchain_env));
-		else if (get_current_platform_toolchain() != NULL)
-		    current_toolchain = get_current_platform_toolchain();
 		else
-			current_toolchain = strdup(get_default_info(XCRUN_DEFAULT_CFG).toolchain);
+			current_toolchain = strdup(get_default_info().toolchain);
 	}
 
 	/* Show SDK path? */

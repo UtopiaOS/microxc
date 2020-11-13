@@ -1,6 +1,6 @@
 bin_PROGRAMS = xcrun
 
-xcrun_SOURCES = xcrun.m ini.c
+xcrun_SOURCES = xcrun.m config_handler.c
 xcrun_CFLAGS = -I$(top_srcdir)/lib -Wall -Werror -O2
 xcrun_OBJCFLAGS = -I$(top_srcdir)/lib -Wall -Werror -O2
 xcrun_LDADD = $(top_builddir)/lib/libmicroxcode.la -lSystem -lobjc 
