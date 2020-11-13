@@ -401,14 +401,18 @@ static char *search_command(const char *name, char *dirs)
 	/* Search each path entry in dirs until we find our program. */
 	absl_path = strtok(dirs, delimiter);
 	while (absl_path != NULL) {
-		verbose_printf(stdout, "xcrun: info: checking directory \'%s\' for command \'%s\'...\n", absl_path, name);
+	    if (verbose_mode == 1) {
+            verbose_printf(stdout, "xcrun: info: checking directory \'%s\' for command \'%s\'...\n", absl_path, name);
+	    }
 
 		/* Construct our program's absolute path. */
 		sprintf(cmd, "%s/%s", absl_path, name);
 
 		/* Does it exist? Is it an executable? */
 		if (access(cmd, (F_OK | X_OK)) != (-1)) {
-			verbose_printf(stdout, "xcrun: info: found command's absolute path: \'%s\'\n", cmd);
+		    if (verbose_mode == 1) {
+                verbose_printf(stdout, "xcrun: info: found command's absolute path: \'%s\'\n", cmd);
+		    }
 			break;
 		}
 
