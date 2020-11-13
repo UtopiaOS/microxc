@@ -43,7 +43,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#include "ini.h"
 #include "developer_path.h"
 #include "verbose_printf.h"
 
@@ -289,7 +288,7 @@ static int default_cfg_handler(void *user, const char *section, const char *name
 
 
 NSDictionary*
-plist_parse(NSURL *target_file_path) {
+plist_parse_toolchain(NSURL *target_file_path) {
 
     NSData *data_of_path = [NSData dataWithContentsOfURL:target_file_path];
     NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_path
@@ -329,7 +328,7 @@ static toolchain_config get_toolchain_info(const char *path)
 
 	info_path = [NSURL fileURLWithPath:final_path];
 
-	NSDictionary *dictSession = plist_parse(info_path);
+	NSDictionary *dictSession = plist_parse_toolchain(info_path);
 
 	const char *version_char = [[dictSession valueForKey:@"version"] UTF8String];
 	const char *name_char = [[dictSession valueForKey:@"name"] UTF8String];
@@ -338,6 +337,16 @@ static toolchain_config get_toolchain_info(const char *path)
 	config.name = name_char;
 
 	return config;
+
+}
+
+NSDictionary*
+plist_parse_sdk(NSURL targetFilePath) {
+    NSData *data_of_path = [NSData dataWithContentsOfURL:target_file_path];
+
+    NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_path
+                                                                               options:NSPropertyListMutableContainers format:NULL error: NULL];
+
 
 
 }
