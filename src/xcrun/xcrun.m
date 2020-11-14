@@ -195,35 +195,6 @@ static sdk_config get_sdk_info(const char *path)
 }
 
 /**
- * @func get_toolchain_path -- Return the specified toolchain path
- * @arg name - name of the toolchain
- * @return: absolute path of toolchain on success, exit on failure
- */
-static char *get_toolchain_path(const char *name)
-{
-	char *path = NULL;
-	char *devpath = NULL;
-
-	devpath = developer_dir;
-	path = (char *)malloc(PATH_MAX - 1);
-
-	if (devpath != NULL) {
-		sprintf(path, "%s/Toolchains/%s.xctoolchain", devpath, name);
-		if (validate_directory_path(path) != (-1))
-			return path;
-		else {
-			fprintf(stderr, "xcrun: error: \'%s\' is not a valid toolchain path.\n", path);
-			free(path);
-			exit(1);
-		}
-	} else {
-		fprintf(stderr, "xcrun: error: failed to retrieve developer path, do you have it set?\n");
-		free(path);
-		exit(1);
-	}
-}
-
-/**
  * @func get_sdk_path -- Return the specified sdk path
  * @arg name - name of the sdk
  * @return: absolute path of sdk on success, exit on failure
