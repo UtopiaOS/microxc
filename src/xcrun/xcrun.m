@@ -42,12 +42,14 @@
 #include <sys/types.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <AppKit/AppKit.h>
 
 #include "developer_path.h"
 #include "verbose_printf.h"
 #include "typedefs.h"
 #include "config_handler.h"
 #include "parsers.h"
+#include "stripext.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -87,20 +89,6 @@ static const char *multicall_tool_names[4] = {
 
 /* Our program's name as called by the user */
 static char *progname;
-
-/* helper function to strip file extensions */
-static void stripext(char *dst, const char *src)
-{
-	int len;
-	char *s;
-
-	if ((s = strchr(src, '.')) != NULL)
-		len = (s - src);
-	else
-		len = strlen(src);
-
-	strncpy(dst, src, len);
-}
 
 /* helper function to test for the authenticity of an sdk */
 static int test_sdk_authenticity(const char *path)
