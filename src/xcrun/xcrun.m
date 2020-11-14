@@ -50,6 +50,7 @@
 #include "config_handler.h"
 #include "parsers.h"
 #include "stripext.h"
+#include "sdk_authenticity.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -89,23 +90,6 @@ static const char *multicall_tool_names[4] = {
 
 /* Our program's name as called by the user */
 static char *progname;
-
-/* helper function to test for the authenticity of an sdk */
-static int test_sdk_authenticity(const char *path)
-{
-	int retval = 0;
-	char *fname = NULL;
-
-	fname = (char *)malloc(PATH_MAX - 1);
-
-	sprintf(fname, "%s/SDKSettings.plist", path);
-	if (access(fname, F_OK) != (-1))
-		retval = 1;
-
-	free(fname);
-
-	return retval;
-}
 
 /**
  * @func logging_printf -- Print output to fp in logging mode.
