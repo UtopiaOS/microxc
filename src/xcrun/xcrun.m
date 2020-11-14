@@ -50,7 +50,7 @@
 #include "config_handler.h"
 #include "parsers.h"
 #include "stripext.h"
-#include "sdk_authenticity.h"
+#include "validators.h"
 #include "logging_printf.h"
 
 // Obj-c
@@ -135,29 +135,6 @@ static void version(void)
 	fprintf(stdout, "xcrun version %s\n", TOOL_VERSION);
 	exit(0);
 }
-
-/**
- * @func validate_directory_path -- validate if requested directory path exists
- * @arg dir - directory to validate
- * @return: 0 on success, -1 on failure
- */
-static int validate_directory_path(const char *dir)
-{
-	struct stat fstat;
-	int retval = -1;
-
-	if (stat(dir, &fstat) != 0)
-		fprintf(stderr, "xcrun: error: unable to validate path \'%s\' (errno=%s)\n", dir, strerror(errno));
-	else {
-		if (S_ISDIR(fstat.st_mode) == 0)
-			fprintf(stderr, "xcrun: error: \'%s\' is not a valid path\n", dir);
-		else
-			retval = 0;
-	}
-
-	return retval;
-}
-
 
 static toolchain_config get_toolchain_info(const char *path)
 {
