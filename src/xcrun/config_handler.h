@@ -5,7 +5,7 @@
 #ifndef MICROXCODE_CONFIG_HADLER_H
 #define MICROXCODE_CONFIG_HADLER_H
 
-#include "typedefs.h"
+#include "../../lib/typedefs.h"
 
 default_config get_default_info(void);
 
