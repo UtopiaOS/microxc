@@ -5,6 +5,7 @@
 #ifndef MICROXCODE_GETTERS_H
 #define MICROXCODE_GETTERS_H
 
-char *get_toolchain_path(const char*);
+char *get_toolchain_path(const char*, const char*);
+char *get_sdk_path(const char*, const char*);
 
 #endif //MICROXCODE_GETTERS_H
