@@ -51,7 +51,7 @@ call_command(const char *cmd, const char *current_sdk, const char *current_toolc
     sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, get_toolchain_path(developer_path, current_toolchain), getenv("PATH"));
     sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(developer_path, current_toolchain));
     sprintf(envp[3], "HOME=%s", getenv("HOME"));
-    
+
     /*if (logging_mode == 1) {
         logging_printf(stdout, "xcrun: info: invoking command:\n\t\"%s", cmd);
         for (i = 1; i < argc; i++)
@@ -122,59 +122,7 @@ int request_command(const char *name, const char* current_sdk, const char* curre
      * If xcrun was called in a multicall state, we still want to specify current_sdk for SDKROOT and
      * current_toolchain for PATH.
      */
-
-    if (current_sdk == NULL) {
-        current_sdk = (char *)malloc(255);
-        if ((sdk_env = getenv("SDKROOT")) != NULL)  {
-            stripext((char *)current_sdk, basename(sdk_env));
-        } else {
-            current_sdk = strdup(get_default_info().sdk);
-        }
-    }
-
-    if (current_toolchain == NULL) {
-        current_toolchain = (char *)malloc(255);
-        if ((toolchain_env = getenv("TOOLCHAINS")) != NULL) {
-            stripext((char *)current_toolchain, basename(toolchain_env));
-        } else {
-            current_toolchain = strdup(get_default_info().toolchain);
-        }
-    }
-
-    /* No matter the circumstance, search the developer dir. */
-    sprintf(search_string, "%s/usr/bin:", developer_path);
-
-    /* !THIS WHOLE BLOCK REQUIRES MORE INVESTIGATION TO BE REWRITTEN */
-
-    /* If we implicitly specified an sdk, search the sdk and it's associated toolchain.
-    toolch_name = strdup(get_sdk_info(get_sdk_path(developer_path,current_sdk), current_sdk).toolchain);
-    sprintf((search_string + strlen(search_string)), "%s/usr/bin:%s/usr/bin", get_sdk_path(developer_path,current_sdk), get_toolchain_path(developer_path,toolch_name));
-    goto do_search;
-
-    * If we implicitly specified a toolchain, only search the toolchain.
-        sprintf((search_string + strlen(search_string)), "%s/usr/bin", get_toolchain_path(current_toolchain));
-        goto do_search;
-    *  If we explicitly specified an SDK, append it to the search string.
-    if (alternate_sdk_path != NULL) {
-        sprintf((search_string + strlen(search_string)), "%s/usr/bin:", alternate_sdk_path);
-        * We also want to append an associated toolchain if this is really an SDK folder.
-        if (test_sdk_authenticity(alternate_sdk_path) == 1) {
-            toolch_name = strdup(get_sdk_info(alternate_sdk_path).toolchain);
-            sprintf((search_string + strlen(search_string)), "%s/usr/bin", get_toolchain_path(developer_path, toolch_name));
-            * We now have a toolchain, so skip to search.
-            goto do_search;
-        }
-    }
-
-    * If we explicitly specified a toolchain, append it to the search string.
-    if (alternate_toolchain_path != NULL)
-        sprintf((search_string + strlen(search_string)), "%s/usr/bin", alternate_toolchain_path);
-
-    * By default, we search our developer dir, our default sdk, and our default toolchain only.
-    if (explicit_sdk_mode == 0 && explicit_toolchain_mode == 0 && alternate_toolchain_path == NULL && alternate_sdk_path == NULL)
-        sprintf((search_string + strlen(search_string)), "%s/usr/bin:%s/usr/bin", get_sdk_path(current_sdk), get_toolchain_path(current_toolchain));
-    !THIS WHOLE BLOCK REQUIRES MORE INVESTIGATION TO BE REWRITTEN */
-
+    
     /* Search each path entry in search_string until we find our program. */
     do_search:
     if ((cmd = search_command(name, search_string)) != NULL) {
