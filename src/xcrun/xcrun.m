@@ -51,6 +51,7 @@
 #include "parsers.h"
 #include "stripext.h"
 #include "sdk_authenticity.h"
+#include "logging_printf.h"
 
 // Obj-c
 #include <CoreFoundation/CoreFoundation.h>
@@ -90,23 +91,6 @@ static const char *multicall_tool_names[4] = {
 
 /* Our program's name as called by the user */
 static char *progname;
-
-/**
- * @func logging_printf -- Print output to fp in logging mode.
- * @arg fp - pointer to file (file, stderr, or stdio)
- * @arg str - string to print
- * @arg ... - additional arguments used
- */
-static void logging_printf(FILE *fp, const char *str, ...)
-{
-	va_list args;
-
-	if (logging_mode == 1) {
-		va_start(args, str);
-		vfprintf(fp, str, args);
-		va_end(args);
-	}
-}
 
 /**
  * @func usage -- Print helpful information about this program.
