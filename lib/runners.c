@@ -46,34 +46,12 @@ call_command(const char *cmd, const char *current_sdk, const char *current_toolc
     envp[1] = (char *)malloc(PATH_MAX - 1);
     envp[2] = (char *)malloc(PATH_MAX - 1);
     envp[3] = (char *)malloc(PATH_MAX - 1);
-    envp[4] = (char *)malloc(255);
 
     sprintf(envp[0], "SDKROOT=%s", get_sdk_path(developer_path, current_sdk));
     sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, get_toolchain_path(developer_path, current_toolchain), getenv("PATH"));
     sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(developer_path, current_toolchain));
     sprintf(envp[3], "HOME=%s", getenv("HOME"));
-
-
-
-    if ((deployment_target = getenv("IOS_DEPLOYMENT_TARGET")) != NULL)
-        sprintf(envp[4], "IOS_DEPLOYMENT_TARGET=%s", deployment_target);
-    else if ((deployment_target = getenv("MACOSX_DEPLOYMENT_TARGET")) != NULL)
-        sprintf(envp[4], "MACOSX_DEPLOYMENT_TARGET=%s", deployment_target);
-    else {
-        /* Use the deployment target info that is provided by the SDK. */
-        if ((deployment_target = strdup(get_sdk_info(get_sdk_path(developer_path, current_sdk), current_sdk).deployment_target)) != NULL) {
-            /* !THIS BLOCK REQUIRES MORE DEVELOPMENT TO BE REWRITTEN
-            if (macosx_deployment_target_set == 1)
-                sprintf(envp[5], "MACOSX_DEPLOYMENT_TARGET=%s", deployment_target);
-            else if (ios_deployment_target_set == 1)
-                sprintf(envp[5], "IOS_DEPLOYMENT_TARGET=%s", deployment_target);
-            */
-        } else {
-            fprintf(stderr, "xcrun: error: failed to retrieve deployment target information for %s.sdk.\n", current_sdk);
-            exit(1);
-        }
-    }
-
+    
     /*if (logging_mode == 1) {
         logging_printf(stdout, "xcrun: info: invoking command:\n\t\"%s", cmd);
         for (i = 1; i < argc; i++)
