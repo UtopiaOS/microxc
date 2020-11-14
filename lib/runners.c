@@ -28,7 +28,6 @@ call_command(const char *cmd, const char *current_sdk, const char *current_toolc
 {
     int i;
     char *envp[7] = { NULL };
-    char *deployment_target = NULL;
     char *developer_path = get_developer_path();
 
     /*
@@ -112,17 +111,13 @@ char *search_command(const char *name, char *dirs)
 int request_command(const char *name, const char* current_sdk, const char* current_toolchain, int argc, char *argv[])
 {
     char *cmd = NULL;	/* used to hold our command's absolute path */
-    char *sdk_env = NULL;	/* used for passing SDKROOT in call_command */
-    char *toolch_name = NULL;	/* toolchain name to be used with sdk */
-    char *toolchain_env = NULL;	/* used for passing PATH in call_command */
     char search_string[PATH_MAX * 1024];	/* our search string */
-    char *developer_path = get_developer_path();
 
     /*
      * If xcrun was called in a multicall state, we still want to specify current_sdk for SDKROOT and
      * current_toolchain for PATH.
      */
-    
+
     /* Search each path entry in search_string until we find our program. */
     do_search:
     if ((cmd = search_command(name, search_string)) != NULL) {
