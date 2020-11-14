@@ -9,6 +9,7 @@ typedef enum {
     NOT_AUTHENTIC = 3,
     UNABLE_TO_VALIDATE,
     NOT_VALID,
+    UNABLE_TO_GET_DEV_PATH,
 } microxcode_error_state_t;
 
 

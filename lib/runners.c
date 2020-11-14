@@ -64,7 +64,7 @@ call_command(const char *cmd, const char *current_sdk, const char *current_toolc
 /**
  * @func search_command -- Search a set of directories for a given command
  * @arg name - program's name
- * @arg dirs - set of directories to search, seperated by colons
+ * @arg dirs - set of directories to search, separated by colons
  * @return: the program's absolute path on success, NULL on failure
  */
 char *search_command(const char *name, char *dirs)

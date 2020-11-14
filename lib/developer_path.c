@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "developer_path.h"
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
@@ -8,9 +7,12 @@
 #include <sys/syslimits.h>
 #include <errno.h>
 
-#define SDK_CFG ".xcdev.dat"
+#include "errors.h"
+#include "developer_path.h"
 
-char* var_dev_symlink (const char* path){
+static char*
+var_dev_symlink (const char* path)
+{
 	struct stat buf;
 	int result;
 	int is_link;
@@ -44,12 +46,10 @@ char* var_dev_symlink (const char* path){
  * @return: string of current path on success, NULL string on failure
  */
 char *
-get_developer_path(void)
+get_developer_path(int *err)
 {
-	FILE *fp = NULL;
-	char devpath[PATH_MAX - 1];
-	char *pathtocfg = NULL;
-	char *cfg_path = NULL;
+	microxcode_error_state_t error_state;
+    char devpath[PATH_MAX - 1];
 	char *value = NULL;
 
 	if ((value = getenv("DEVELOPER_DIR")) != NULL){
@@ -60,29 +60,6 @@ get_developer_path(void)
 		return value;
 	}
 
-	memset(devpath, 0, sizeof(devpath));
-
-	if ((pathtocfg = getenv("HOME")) == NULL) {
-		fprintf(stderr, "xcode-select: error: failed to read HOME environment variable.\n");
-		return NULL;
-	}
-
-	cfg_path = (char *)malloc((strlen(pathtocfg) + sizeof(SDK_CFG)));
-
-	strcat(pathtocfg, "/");
-	strcat(cfg_path, strcat(pathtocfg, SDK_CFG));
-
-	if ((fp = fopen(cfg_path, "r")) != NULL) {
-		fseek(fp, SEEK_SET, 0);
-		(void)fread(devpath, (PATH_MAX - 1), 1, fp);
-		value = devpath;
-		fclose(fp);
-	} else {
-		fprintf(stderr, "xcode-select: error: unable to read configuration file. (errno=%s)\n", strerror(errno));
-		return NULL;
-	}
-
-	free(cfg_path);
-
+	if (err) = { *err = UNABLE_TO_GET_DEV_PATH }
 	return value;
 }
