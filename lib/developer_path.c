@@ -21,18 +21,16 @@ var_dev_symlink(const char *path) {
         return NULL;
     };
 
-    if (lstat(path, &buf) == 0) {
-        symlink_name = malloc(buf.st_size + 1);
-        did_readlink = readlink(path, symlink_name, buf.st_size + 1);
-        if (did_readlink != -1) {
-            symlink_name[buf.st_size] = '\0';
-            if (stat(symlink_name, &buf) == 0) {
-                // return what it points to
-                return symlink_name;
-            }
-        } else {
-            return NULL;
+    symlink_name = malloc(buf.st_size + 1);
+    did_readlink = readlink(path, symlink_name, buf.st_size + 1);
+    if (did_readlink != -1) {
+        symlink_name[buf.st_size] = '\0';
+        if (stat(symlink_name, &buf) == 0) {
+            // return what it points to
+            return symlink_name;
         }
+    } else {
+        return NULL;
     }
     return NULL;
 }
