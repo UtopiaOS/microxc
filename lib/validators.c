@@ -12,11 +12,10 @@
 #include "errors.h"
 
 void
-test_sdk_authenticity(const char *path, int *err)
-{
+test_sdk_authenticity(const char *path, int *err) {
     char *fname = NULL;
 
-    fname = (char *)malloc(PATH_MAX - 1);
+    fname = (char *) malloc(PATH_MAX - 1);
 
     sprintf(fname, "%s/SDKSettings.plist", path);
     if (err) {
@@ -27,15 +26,19 @@ test_sdk_authenticity(const char *path, int *err)
 }
 
 void
-validate_directory_path(const char *dir, int *err)
-{
+validate_directory_path(const char *dir, int *err) {
     struct stat fstat;
 
-    if (err) {
-        *err = (stat(dir, &fstat) != 0) ? UNABLE_TO_VALIDATE : SUCCESFUL_OPERATION;
+    if (stat(dir, &fstat) != 0) {
+        if (err) { *err = UNABLE_TO_VALIDATE; }
+        return;
     }
-    if (err) {
-        *err = (S_ISDIR(fstat.st_mode) == 0) ? NOT_VALID : SUCCESFUL_OPERATION;
+
+    if (S_ISDIR(fstat.st_mode) == 0) {
+        if (err) { *err = NOT_VALID; }
+        return;
     }
+
+    if (err) { *err = SUCCESFUL_OPERATION; }
 
 }

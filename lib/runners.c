@@ -84,6 +84,7 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
     }
 
 
+    printf("%s", cmd);
     if (execve(cmd, argv, envp) == -1) {
         if (err) { *err = RUNNING_COMMAND_ERROR; }
         return;
@@ -100,7 +101,7 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  */
 char *search_command(bool verbose,const char *name, char *dirs) {
     char *cmd = NULL;    /* command's absolute path */
-    char *absl  _path = NULL;        /* path entry to search */
+    char *absl_path = NULL;        /* path entry to search */
     char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
 
     /* Allocate space for the program's absolute path */
@@ -137,11 +138,14 @@ char *search_command(bool verbose,const char *name, char *dirs) {
  * @arg argv -- arguments to be passed if program found
  * @return: -1 on failed search, 0 on successful search, no return on execute
  */
-int request_command(bool verbose, const char *name, const char *current_sdk, const char *current_toolchain, int argc,
+int request_command(bool verbose, bool find_only, const char *name, const char *current_sdk, const char *current_toolchain, int argc,
                     char *argv[], int *err) {
     char *cmd = NULL;    /* used to hold our command's absolute path */
     char search_string[PATH_MAX * 1024];    /* our search string */
-    int error;
+    int error; /* Check if some error occurred in another function */
+
+    printf("%s\n", current_sdk);
+    printf("%s\n", current_toolchain);
 
     char *developer_path = get_developer_path(&error);
     if (error != SUCCESFUL_OPERATION) {
@@ -149,25 +153,18 @@ int request_command(bool verbose, const char *name, const char *current_sdk, con
         return -1;
     }
 
-    /*
-     * If xcrun was called in a multicall state, we still want to specify current_sdk for SDKROOT and
-     * current_toolchain for PATH.
-     */
-
     sprintf(search_string, "%s/usr/bin:", developer_path);
 
     /* Search each path entry in search_string until we find our program. */
     do_search:
     if ((cmd = search_command(verbose, name, search_string)) != NULL) {
-        /*! THIS BLOCK REQUIRES MORE RESEARCH TO BE REWRITTEN */
-        // temporal solution so it compiles
-        int finding_mode = 0;
-        if (finding_mode == 1) {
+        if (find_only) {
             if (access(cmd, (F_OK | X_OK)) != (-1)) {
                 fprintf(stdout, "%s\n", cmd);
                 free(cmd);
                 return 0;
             } else
+                if (err) {*err = PROGRAM_NOT_FOUND; }
                 return -1;
         } else {
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);

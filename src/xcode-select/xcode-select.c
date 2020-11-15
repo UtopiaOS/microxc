@@ -48,7 +48,7 @@
 
 int main(int argc, char *argv[]){
     int error;
-    request_command(false, "git", "fdfasdfdasfsd", "XcodeDefault", argc, argv, &error);
+    request_command(false, true, "git", "fdfasdfdasfsd", "XcodeDefault", argc, argv, &error);
     printf("%d", error);
     return 0;
 }
