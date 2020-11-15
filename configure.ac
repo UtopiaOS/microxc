@@ -9,8 +9,5 @@ AC_PROG_OBJC
 
 AC_PROG_CC
 AC_CONFIG_FILES([Makefile
-                                lib/Makefile
-                                src/Makefile
-                                src/xcrun/Makefile
-                                src/xcode-select/Makefile])
+                                lib/Makefile])
 AC_OUTPUT
