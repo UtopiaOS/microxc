@@ -13,6 +13,9 @@ enum microxcode_error_state_t{
     ERROR_GETTING_TOOLCHAIN,
     ERROR_GETTING_SDK,
     UNSUPPORTED_PLATFORM,
+    ERROR_ALLOCATING_MEMORY,
+    ERROR_GETTING_DEFAULT_CONFIG,
+
 
 
     // Successful operations start at 30

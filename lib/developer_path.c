@@ -48,7 +48,6 @@ var_dev_symlink (const char* path)
 char *
 get_developer_path(int *err)
 {
-	microxcode_error_state_t error_state;
     char devpath[PATH_MAX - 1];
 	char *value = NULL;
 
@@ -60,6 +59,6 @@ get_developer_path(int *err)
 		return value;
 	}
 
-	if (err) = { *err = UNABLE_TO_GET_DEV_PATH }
+	if (err) { *err = UNABLE_TO_GET_DEV_PATH; }
 	return value;
 }

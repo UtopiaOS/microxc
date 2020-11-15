@@ -26,4 +26,8 @@ typedef struct {
     const char *toolchain;
 } default_config;
 
+toolchain_config *init_toolchain_config(const char*, const char*, int*);
+sdk_config *init_sdk_config(const char*, const char*, const char*, const char*, const char*, int*);
+default_config *init_default_config(const char*, const char*, int*);
+
 #endif //MICROXCODE_TYPEDEFS_H

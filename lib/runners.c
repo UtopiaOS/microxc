@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <errno.h>
+#include <stdbool.h>
 
 /**
  * @func call_command -- Execute new process to replace this one.
@@ -24,7 +25,7 @@
  * @return: -1 on error, otherwise no return
  */
 int
-call_command(const char *cmd, const char *current_sdk, const char *current_toolchain, int argc, char *argv[])
+call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc, char *argv[])
 {
     int i;
     char *envp[7] = { NULL };
@@ -45,6 +46,7 @@ call_command(const char *cmd, const char *current_sdk, const char *current_toolc
     envp[1] = (char *)malloc(PATH_MAX - 1);
     envp[2] = (char *)malloc(PATH_MAX - 1);
     envp[3] = (char *)malloc(PATH_MAX - 1);
+
 
     sprintf(envp[0], "SDKROOT=%s", get_sdk_path(developer_path, current_sdk));
     sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, get_toolchain_path(developer_path, current_toolchain), getenv("PATH"));

@@ -5,7 +5,7 @@
 #ifndef MICROXCODE_SDK_AUTHENTICITY_H
 #define MICROXCODE_SDK_AUTHENTICITY_H
 
-int test_sdk_authenticity(const char*, *int);
-int validate_directory_path(const char*, *int);
+void test_sdk_authenticity(const char*, int*);
+void validate_directory_path(const char*, int*);
 
 #endif //MICROXCODE_SDK_AUTHENTICITY_H

@@ -12,8 +12,7 @@
 #include "errors.h"
 
 static NSDictionary *
-plist_parse(NSURL *target_plist_path, NSString *target_name)
-{
+plist_parse(NSURL *target_plist_path, NSString *target_name) {
     if (target_plist_path == NULL || target_name == NULL) {
         return NULL;
     }
@@ -21,10 +20,10 @@ plist_parse(NSURL *target_plist_path, NSString *target_name)
     NSData *data_of_file = [NSData dataWithContentsOfURL:target_plist_path];
 
     NSDictionary *parse_plist_dict = [NSPropertyListSerialization propertyListWithData:data_of_file
-                                      options:NSPropertyListMutableContainers format:NULL error:NULL];
+                                                                               options:NSPropertyListMutableContainers format:NULL error:NULL];
 
     NSString *canonical_name = [[[parse_plist_dict valueForKey:@"CanonicalName"]
-                                 componentsSeparatedByCharactersInSet:[[NSCharacterSet letterCharacterSet] invertedSet]]
+            componentsSeparatedByCharactersInSet:[[NSCharacterSet letterCharacterSet] invertedSet]]
             componentsJoinedByString:@""];
 
     NSString *version = [parse_plist_dict valueForKey:@"DefaultDeploymentTarget"];
@@ -52,12 +51,9 @@ plist_parse(NSURL *target_plist_path, NSString *target_name)
     return our_dict;
 }
 
-toolchain_config
-get_toolchain_info(const char *path, const char *current_sdk, int *err)
-{
-
-    microxcode_error_state_t error_state;
-    toolchain_config config;
+toolchain_config *
+get_toolchain_info(const char *path, const char *current_sdk, int *err) {
+    int error;
     NSURL *info_path;
 
     // lets handle the conversion from a CString to an NSString
@@ -70,15 +66,21 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err)
 
     NSString *target_sdk = [NSString stringWithCString:current_sdk encoding:NSUTF8StringEncoding];
 
-    NSDictionary *dictSession = plist_parse(info_path, target_sdk);
+    NSDictionary *dict_session = plist_parse(info_path, target_sdk);
 
-    if (dictSession == NULL) {
+    if (dict_session == NULL) {
         if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
         return NULL;
     }
 
-    config.version = [[dictSession valueForKey:@"version"] UTF8String];
-    config.name = [[dictSession valueForKey:@"name"] UTF8String];
+    toolchain_config *config = init_toolchain_config([[dict_session valueForKey:@"version"] UTF8String],
+                                                     [[dict_session valueForKey:@"name"] UTF8String], &error);
+
+    if (config == NULL && err) {
+        if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
+        free(config);
+        return NULL;
+    }
 
     return config;
 }
@@ -88,12 +90,10 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err)
  * @arg path - path to sdk's info.ini
  * @return: struct containing sdk config info
  */
-sdk_config
-get_sdk_info(const char *path, const char *current_sdk, int *err)
-{
+sdk_config *
+get_sdk_info(const char *path, const char *current_sdk, int *err) {
 
-    microxcode_error_state_t error_state;
-    sdk_config config;
+    int error;
     NSURL *info_path;
 
     NSString *initial_path = [NSString stringWithCString:path encoding:NSUTF8StringEncoding];
@@ -112,22 +112,24 @@ get_sdk_info(const char *path, const char *current_sdk, int *err)
         return NULL;
     }
 
-    config.version = [[dict_session valueForKey:@"version"] UTF8String];
-    config.name = [[dict_session valueForKey:@"name"] UTF8String];
-    config.default_arch = [[dict_session valueForKey:@"arch"] UTF8String];
-    config.deployment_target = [[dict_session valueForKey:@"deployment_target"] UTF8String];
-    config.toolchain = [[dict_session valueForKey:@"toolchain"] UTF8String];
+    sdk_config *config = init_sdk_config([[dict_session valueForKey:@"name"] UTF8String],
+                                         [[dict_session valueForKey:@"version"] UTF8String],
+                                         [[dict_session valueForKey:@"arch"] UTF8String],
+                                         [[dict_session valueForKey:@"deployment_target"] UTF8String],
+                                         [[dict_session valueForKey:@"toolchain"] UTF8String], &error);
+
+    if (config != NULL && err) {
+        *err = ERROR_GETTING_SDK;
+        return NULL;
+    }
 
     return config;
-
 }
 
-default_config
-get_default_info(int *err)
-{
-    microxcode_error_state_t error_state;
+default_config *
+get_default_info(int *err) {
     char *supposed_name;
-    default_config config;
+    int error;
 
 #if TARGET_OS_IPHONE
     supposed_name = "iPhoneOS";
@@ -142,17 +144,19 @@ get_default_info(int *err)
         return NULL;
     }
 
-    config.sdk = supposed_name;
     // TODO: Unhardcode this! This is only temporal!
-    config.toolchain = "XcodeDefault";
+    default_config *config = init_default_config(supposed_name, "XcodeDefault", &error);
+
+    if (config == NULL && err) {
+        *err = ERROR_GETTING_DEFAULT_CONFIG;
+        return NULL;
+    }
 
     return config;
-
 }
 
 char *
-get_toolchain_path(const char *developer_dir, const char *name, int *err)
-{
+get_toolchain_path(const char *developer_dir, const char *name, int *err) {
     char *path = NULL;
     int error;
 
@@ -173,8 +177,7 @@ get_toolchain_path(const char *developer_dir, const char *name, int *err)
 }
 
 char *
-get_sdk_path(const char *developer_dir, const char *name, int *err)
-{
+get_sdk_path(const char *developer_dir, const char *name, int *err) {
     char *path = NULL;
     int error;
 

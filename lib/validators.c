@@ -20,7 +20,7 @@ test_sdk_authenticity(const char *path, int *err)
 
     sprintf(fname, "%s/SDKSettings.plist", path);
     if (err) {
-        *err = (access(fname, F_OK) != -1) ? NOT_AUTHENTIC : SUCCESSFUL_OPERATION;
+        *err = (access(fname, F_OK) != -1) ? NOT_AUTHENTIC : SUCCESFUL_OPERATION;
     }
 
     free(fname);
