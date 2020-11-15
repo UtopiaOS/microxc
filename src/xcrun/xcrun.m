@@ -79,7 +79,7 @@
 
 int main(int argc, char *argv[]){
     int error;
-    request_command(false, false, "git", "rewrqew", "rqewrewr", argc, argv, &error);
-    printf("%d", error);
+    request_command(false, false, "git", "MacOSX", "XcodeDefault", argc, argv, &error);
+    printf("\n%d\n", error);
     return 0;
 }

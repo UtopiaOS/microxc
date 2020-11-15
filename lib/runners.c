@@ -165,10 +165,13 @@ int request_command(bool verbose, bool find_only, const char *name, const char *
                 return 0;
             } else
                 if (err) {*err = PROGRAM_NOT_FOUND; }
+                free(cmd);
                 return -1;
         } else {
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
             if (error != SUCCESFUL_OPERATION) {
+                printf("%d", error);
+                if(err) {*err = error;}
                 return -1;
             }
             /* NO REACH */
