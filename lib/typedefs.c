@@ -44,10 +44,10 @@ init_sdk_config(const char *name, const char *version, const char *toolchain, co
 }
 
 default_config *
-init_default_config(const char* sdk, const char* toolchain, int *err) {
+init_default_config(const char *sdk, const char *toolchain, int *err) {
     default_config *our_default_config = malloc(sizeof(default_config));
 
-    if (our_default_config == NULL && err){
+    if (our_default_config == NULL && err) {
         *err = ERROR_ALLOCATING_MEMORY;
         free(our_default_config);
         return NULL;

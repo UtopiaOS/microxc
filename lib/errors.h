@@ -5,7 +5,7 @@
 #ifndef MICROXCODE_ERRORS_H
 #define MICROXCODE_ERRORS_H
 
-enum microxcode_error_state_t{
+enum microxcode_error_state_t {
     NOT_AUTHENTIC = 3,
     UNABLE_TO_VALIDATE,
     NOT_VALID,
@@ -17,7 +17,6 @@ enum microxcode_error_state_t{
     ERROR_GETTING_DEFAULT_CONFIG,
     RUNNING_COMMAND_ERROR,
     PROGRAM_NOT_FOUND,
-
 
 
     // Successful operations start at 30

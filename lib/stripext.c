@@ -40,12 +40,11 @@
 #include "stripext.h"
 
 void
-stripext(char *dst, const char* src)
-{
+stripext(char *dst, const char *src) {
     int len;
     char *s;
 
-    if((s = strchr(src, '.')) != NULL){
+    if ((s = strchr(src, '.')) != NULL) {
         len = (s - src);
     } else {
         len = strlen(src);
