@@ -30,8 +30,11 @@ var_dev_symlink(const char *path) {
             return symlink_name;
         }
     } else {
+        free(symlink_name);
         return NULL;
     }
+
+    free(symlink_name);
     return NULL;
 }
 
