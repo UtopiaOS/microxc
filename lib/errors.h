@@ -5,7 +5,7 @@
 #ifndef MICROXCODE_ERRORS_H
 #define MICROXCODE_ERRORS_H
 
-typedef enum {
+enum microxcode_error_state_t{
     NOT_AUTHENTIC = 3,
     UNABLE_TO_VALIDATE,
     NOT_VALID,
@@ -13,7 +13,12 @@ typedef enum {
     ERROR_GETTING_TOOLCHAIN,
     ERROR_GETTING_SDK,
     UNSUPPORTED_PLATFORM,
-} microxcode_error_state_t;
+
+
+    // Successful operations start at 30
+    SUCCESFUL_OPERATION = 30,
+
+};
 
 
 #endif //MICROXCODE_ERRORS_H

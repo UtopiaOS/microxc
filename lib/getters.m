@@ -155,17 +155,21 @@ get_toolchain_path(const char *developer_dir, const char *name, int *err)
 {
     microxcode_error_state_t error_state;
     char *path = NULL;
+    int error;
 
     path = (char *) malloc(PATH_MAX - 1);
 
     sprintf(path, "%s/Toolchains/%s.xctoolchain", developer_dir, name);
 
-    if (validate_directory_path(path) == 0) {
-        return path;
+    validate_directory_path(path, &error);
+
+    if (error != SUCCESFUL_OPERATION) {
+        if (err) { *err = error; }
+        return NULL;
     }
 
-    if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
-    return NULL;
+    return path;
+
 }
 
 char *
