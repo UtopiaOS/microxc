@@ -48,14 +48,15 @@ var_dev_symlink (const char* path)
 char *
 get_developer_path(int *err)
 {
-    char devpath[PATH_MAX - 1];
 	char *value = NULL;
 
 	if ((value = getenv("DEVELOPER_DIR")) != NULL){
+	    if (err) { *err = SUCCESFUL_OPERATION; }
 		return value;
 	}
 
 	if ((value = var_dev_symlink("/var/db/xcode_select_link")) != NULL){
+        if (err) { *err = SUCCESFUL_OPERATION; }
 		return value;
 	}
 

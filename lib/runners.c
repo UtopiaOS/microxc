@@ -7,6 +7,7 @@
 #include "stripext.h"
 #include "developer_path.h"
 #include "validators.h"
+#include "errors.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,12 +25,19 @@
  * @arg argv - arguments to be passed to new process
  * @return: -1 on error, otherwise no return
  */
-int
-call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc, char *argv[])
-{
+void
+call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc,
+             char *argv[], int *err) {
     int i;
-    char *envp[7] = { NULL };
-    char *developer_path = get_developer_path();
+    char *envp[7] = {NULL};
+    int error;
+
+    char *developer_path = get_developer_path(&error);
+
+    if (error != SUCCESFUL_OPERATION && err) {
+        *err = error;
+        return;
+    }
 
     /*
      * Pass SDKROOT, PATH, HOME, LD_LIBRARY_PATH, TARGET_TRIPLE, and MACOSX_DEPLOYMENT_TARGET to the called program's environment.
@@ -42,15 +50,28 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
      * > {MACOSX|IOS}_DEPLOYMENT_TARGET is used for tools like ld that need to set the minimum compatibility
      *   version number for a linked binary.
      */
-    envp[0] = (char *)malloc(PATH_MAX - 1);
-    envp[1] = (char *)malloc(PATH_MAX - 1);
-    envp[2] = (char *)malloc(PATH_MAX - 1);
-    envp[3] = (char *)malloc(PATH_MAX - 1);
+    envp[0] = (char *) malloc(PATH_MAX - 1);
+    envp[1] = (char *) malloc(PATH_MAX - 1);
+    envp[2] = (char *) malloc(PATH_MAX - 1);
+    envp[3] = (char *) malloc(PATH_MAX - 1);
 
 
-    sprintf(envp[0], "SDKROOT=%s", get_sdk_path(developer_path, current_sdk));
-    sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, get_toolchain_path(developer_path, current_toolchain), getenv("PATH"));
-    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(developer_path, current_toolchain));
+    sprintf(envp[0], "SDKROOT=%s", get_sdk_path(developer_path, current_sdk, &error));
+    if (error != SUCCESFUL_OPERATION) {
+        *err = error;
+        return;
+    }
+    sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path,
+            get_toolchain_path(developer_path, current_toolchain, &error), getenv("PATH"));
+    if (error != SUCCESFUL_OPERATION) {
+        *err = error;
+        return;
+    }
+    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(developer_path, current_toolchain, &error));
+    if (error != SUCCESFUL_OPERATION) {
+        *err = error;
+        return;
+    }
     sprintf(envp[3], "HOME=%s", getenv("HOME"));
 
     /*if (logging_mode == 1) {
@@ -60,7 +81,13 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
         logging_printf(stdout, "\"\n");
     } */
 
-    return execve(cmd, argv, envp);
+
+    if (execve(cmd, argv, envp) == -1) {
+        if (err) { *err = RUNNING_COMMAND_ERROR; }
+        return;
+    }
+
+    if (err) { *err = SUCCESFUL_OPERATION; }
 }
 
 /**
@@ -69,14 +96,13 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  * @arg dirs - set of directories to search, separated by colons
  * @return: the program's absolute path on success, NULL on failure
  */
-char *search_command(const char *name, char *dirs)
-{
-    char *cmd = NULL;	/* command's absolute path */
-    char *absl_path = NULL;		/* path entry to search */
-    char delimiter[2] = ":";	/* delimiter for directories in dirs argument */
+char *search_command(const char *name, char *dirs) {
+    char *cmd = NULL;    /* command's absolute path */
+    char *absl_path = NULL;        /* path entry to search */
+    char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
 
     /* Allocate space for the program's absolute path */
-    cmd = (char *)malloc(PATH_MAX - 1);
+    cmd = (char *) malloc(PATH_MAX - 1);
 
     /* Search each path entry in dirs until we find our program. */
     absl_path = strtok(dirs, delimiter);
@@ -110,15 +136,19 @@ char *search_command(const char *name, char *dirs)
  * @arg argv -- arguments to be passed if program found
  * @return: -1 on failed search, 0 on successful search, no return on execute
  */
-int request_command(const char *name, const char* current_sdk, const char* current_toolchain, int argc, char *argv[])
-{
-    char *cmd = NULL;	/* used to hold our command's absolute path */
-    char search_string[PATH_MAX * 1024];	/* our search string */
+int request_command(bool verbose, const char *name, const char *current_sdk, const char *current_toolchain, int argc,
+                    char *argv[], int *err) {
+    char *cmd = NULL;    /* used to hold our command's absolute path */
+    char search_string[PATH_MAX * 1024];    /* our search string */
+    int error;
+    char *developer_path = get_developer_path(&error);
 
     /*
      * If xcrun was called in a multicall state, we still want to specify current_sdk for SDKROOT and
      * current_toolchain for PATH.
      */
+
+    sprintf(search_string, "%s/usr/bin:", developer_path);
 
     /* Search each path entry in search_string until we find our program. */
     do_search:
@@ -134,7 +164,11 @@ int request_command(const char *name, const char* current_sdk, const char* curre
             } else
                 return -1;
         } else {
-            call_command(cmd, current_sdk, current_toolchain, argc, argv);
+            printf("%s", "We are here!!!!!!! YO");
+            call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
+            if (error != SUCCESFUL_OPERATION) {
+                return -1;
+            }
             /* NOREACH */
             fprintf(stderr, "xcrun: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
             return -1;

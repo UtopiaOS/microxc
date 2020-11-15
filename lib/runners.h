@@ -4,10 +4,11 @@
 
 #ifndef MICROXCODE_RUNNERS_H
 #define MICROXCODE_RUNNERS_H
+#include <stdbool.h>
 
-int call_command(const char*, const char*, const char*, int argc, char *argv[]);
+void call_command(bool, const char*, const char*, const char*, int argc, char *argv[], int*);
 char* search_command(const char*, char*);
-int request_command(const char*, const char*, const char*, int argc, char *argv[]);
+int request_command(bool, const char*, const char*, const char*, int argc, char *argv[], int*);
 
 
 #endif //MICROXCODE_RUNNERS_H
