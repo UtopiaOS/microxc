@@ -13,19 +13,15 @@
 static char *
 var_dev_symlink(const char *path) {
     struct stat buf;
-    int result;
-    int is_link;
     char *symlink_name;
     int did_readlink;
 
     // The file is not a symlink
-    is_link = stat(path, &buf);
-    if (S_ISLNK(buf.st_mode) != 0) {
+    if (lstat(path, &buf) != 0) {
         return NULL;
     };
 
-    result = (lstat(path, &buf) == 0);
-    {
+    if (lstat(path, &buf) == 0) {
         symlink_name = malloc(buf.st_size + 1);
         did_readlink = readlink(path, symlink_name, buf.st_size + 1);
         if (did_readlink != -1) {
