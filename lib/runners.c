@@ -8,6 +8,8 @@
 #include "developer_path.h"
 #include "validators.h"
 #include "errors.h"
+#include "verbose_printf.h"
+#include "logging_printf.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,12 +76,12 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
     }
     sprintf(envp[3], "HOME=%s", getenv("HOME"));
 
-    /*if (logging_mode == 1) {
-        logging_printf(stdout, "xcrun: info: invoking command:\n\t\"%s", cmd);
+    if (verbose) {
+        logging_printf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
         for (i = 1; i < argc; i++)
             logging_printf(stdout, " %s", argv[i]);
         logging_printf(stdout, "\"\n");
-    } */
+    }
 
 
     if (execve(cmd, argv, envp) == -1) {
@@ -96,7 +98,7 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  * @arg dirs - set of directories to search, separated by colons
  * @return: the program's absolute path on success, NULL on failure
  */
-char *search_command(const char *name, char *dirs) {
+char *search_command(bool verbose,const char *name, char *dirs) {
     char *cmd = NULL;    /* command's absolute path */
     char *absl_path = NULL;        /* path entry to search */
     char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
@@ -107,19 +109,18 @@ char *search_command(const char *name, char *dirs) {
     /* Search each path entry in dirs until we find our program. */
     absl_path = strtok(dirs, delimiter);
     while (absl_path != NULL) {
-        /*if (verbose_mode == 1) {
-            verbose_printf(stdout, "xcrun: info: checking directory \'%s\' for command \'%s\'...\n", absl_path, name);
-        }*/
+        if (verbose) {
+            verbose_printf(stdout, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path, name);
+        }
 
         /* Construct our program's absolute path. */
         sprintf(cmd, "%s/%s", absl_path, name);
 
         /* Does it exist? Is it an executable? */
         if (access(cmd, (F_OK | X_OK)) != (-1)) {
-            /*if (verbose_mode == 1) {
-                verbose_printf(stdout, "xcrun: info: found command's absolute path: \'%s\'\n", cmd);
+            if (verbose) {
+                verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", cmd);
             }
-             */
             break;
         }
 
@@ -152,7 +153,7 @@ int request_command(bool verbose, const char *name, const char *current_sdk, con
 
     /* Search each path entry in search_string until we find our program. */
     do_search:
-    if ((cmd = search_command(name, search_string)) != NULL) {
+    if ((cmd = search_command(verbose, name, search_string)) != NULL) {
         /*! THIS BLOCK REQUIRES MORE RESEARCH TO BE REWRITTEN */
         // temporal solution so it compiles
         int finding_mode = 0;
@@ -164,12 +165,11 @@ int request_command(bool verbose, const char *name, const char *current_sdk, con
             } else
                 return -1;
         } else {
-            printf("%s", "We are here!!!!!!! YO");
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
             if (error != SUCCESFUL_OPERATION) {
                 return -1;
             }
-            /* NOREACH */
+            /* NO REACH */
             fprintf(stderr, "xcrun: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
             return -1;
         }

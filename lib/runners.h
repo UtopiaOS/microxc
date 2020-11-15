@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 void call_command(bool, const char*, const char*, const char*, int argc, char *argv[], int*);
-char* search_command(const char*, char*);
+char* search_command(bool, const char*, char*);
 int request_command(bool, const char*, const char*, const char*, int argc, char *argv[], int*);
 
 

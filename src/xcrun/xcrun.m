@@ -79,9 +79,7 @@
 
 int main(int argc, char *argv[]){
     int error;
-
-    request_command(false, "git", "macOSX", "XcodeDefault", argc, argv, &error);
-    printf("%d\n", NOT_AUTHENTIC);
+    request_command(false, "git", "fsdfadsfds", "XcodeDefault", argc, argv, &error);
     printf("%d", error);
     return 0;
 }
