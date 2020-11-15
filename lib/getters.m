@@ -153,7 +153,6 @@ get_default_info(int *err)
 char *
 get_toolchain_path(const char *developer_dir, const char *name, int *err)
 {
-    microxcode_error_state_t error_state;
     char *path = NULL;
     int error;
 
@@ -168,6 +167,7 @@ get_toolchain_path(const char *developer_dir, const char *name, int *err)
         return NULL;
     }
 
+    if (err) { *err = SUCCESFUL_OPERATION; }
     return path;
 
 }
@@ -175,17 +175,21 @@ get_toolchain_path(const char *developer_dir, const char *name, int *err)
 char *
 get_sdk_path(const char *developer_dir, const char *name, int *err)
 {
-    microxcode_error_state_t error_state;
     char *path = NULL;
+    int error;
 
     path = (char *) malloc(PATH_MAX - 1);
 
     sprintf(path, "%s/Platforms/%s.Platform/Developer/SDKs/%s.sdk", developer_dir, name, name);
-    if (validate_directory_path(path) == 0) {
-        return path;
+
+    validate_directory_path(path, &error);
+
+    if (error != SUCCESFUL_OPERATION) {
+        if (err) { *err = error; }
+        return NULL;
     }
 
-    if (err) { *err = ERROR_GETTING_SDK; }
-    return NULL;
+    if (err) { *err = SUCCESFUL_OPERATION; }
+    return path;
 
 }
