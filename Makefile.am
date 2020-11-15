@@ -1,4 +1,4 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lib
-AM_LDFLAGS = -shared
+AM_LDFLAGS = -dynamiclib
