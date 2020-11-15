@@ -2,15 +2,6 @@
 // Created by Diego Magdaleno on 11/14/20.
 //
 
-#include "runners.h"
-#include "getters.h"
-#include "stripext.h"
-#include "developer_path.h"
-#include "validators.h"
-#include "errors.h"
-#include "verbose_printf.h"
-#include "logging_printf.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -19,6 +10,15 @@
 #include <libgen.h>
 #include <errno.h>
 #include <stdbool.h>
+
+#include "runners.h"
+#include "getters.h"
+#include "stripext.h"
+#include "developer_path.h"
+#include "validators.h"
+#include "errors.h"
+#include "verbose_printf.h"
+#include "logging_printf.h"
 
 /**
  * @func call_command -- Execute new process to replace this one.
@@ -100,7 +100,7 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  */
 char *search_command(bool verbose,const char *name, char *dirs) {
     char *cmd = NULL;    /* command's absolute path */
-    char *absl_path = NULL;        /* path entry to search */
+    char *absl  _path = NULL;        /* path entry to search */
     char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
 
     /* Allocate space for the program's absolute path */
@@ -142,7 +142,12 @@ int request_command(bool verbose, const char *name, const char *current_sdk, con
     char *cmd = NULL;    /* used to hold our command's absolute path */
     char search_string[PATH_MAX * 1024];    /* our search string */
     int error;
+
     char *developer_path = get_developer_path(&error);
+    if (error != SUCCESFUL_OPERATION) {
+        if (err) {*err = error;}
+        return -1;
+    }
 
     /*
      * If xcrun was called in a multicall state, we still want to specify current_sdk for SDKROOT and
@@ -170,13 +175,19 @@ int request_command(bool verbose, const char *name, const char *current_sdk, con
                 return -1;
             }
             /* NO REACH */
-            fprintf(stderr, "xcrun: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
-            return -1;
+            if (verbose){
+                fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
+                return -1;
+            }
         }
     }
 
     /* We have searched everywhere, but we haven't found our program. State why. */
-    fprintf(stderr, "xcrun: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
+    if (verbose) {
+        fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
+    }
+
+    if (err) {*err = PROGRAM_NOT_FOUND;}
 
     return -1;
 }

@@ -79,7 +79,7 @@
 
 int main(int argc, char *argv[]){
     int error;
-    request_command(false, "git", "fsdfadsfds", "XcodeDefault", argc, argv, &error);
+    request_command(false, "gfsdfadsfdsafdfadsfdsait", "fsdfadsfds", "XcodeDefault", argc, argv, &error);
     printf("%d", error);
     return 0;
 }

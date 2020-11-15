@@ -16,6 +16,7 @@ enum microxcode_error_state_t{
     ERROR_ALLOCATING_MEMORY,
     ERROR_GETTING_DEFAULT_CONFIG,
     RUNNING_COMMAND_ERROR,
+    PROGRAM_NOT_FOUND,
 
 
 
