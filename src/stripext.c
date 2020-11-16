@@ -33,8 +33,6 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "stripext.h"
@@ -45,9 +43,9 @@ stripext(char *dst, const char *src) {
     char *s;
 
     if ((s = strchr(src, '.')) != NULL) {
-        len = (s - src);
+        len = (int)(s - src);
     } else {
-        len = strlen(src);
+        len = (int)strlen(src);
     }
 
     strncpy(dst, src, len);

@@ -69,7 +69,7 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
         *err = error;
         return;
     }
-    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/lib", get_toolchain_path(developer_path, current_toolchain, &error));
+    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/src", get_toolchain_path(developer_path, current_toolchain, &error));
     if (error != SUCCESFUL_OPERATION) {
         *err = error;
         return;
