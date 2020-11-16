@@ -13,6 +13,8 @@ add_library(microxcode SHARED
         src/validators.c
         src/verbose_printf.c)
 
+add_executable(runner_example examples/git.c)
+
 set(LIBPLIST_INCLUDE "/usr/local/include" CACHE FILEPATH "Sets the libplist include directory")
 set(LIBPLIST_LIB "/usr/local/lib" CACHE FILEPATH "Sets the libplist lib location")
 
@@ -30,4 +32,7 @@ target_link_directories(microxcode
 target_link_libraries(microxcode
         -lplist-2.0)
 
+target_link_libraries(runner_example microxcode)
+
 add_subdirectory(src)
+add_subdirectory(examples)

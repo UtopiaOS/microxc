@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <plist/plist.h>
 #include <sys/stat.h>
+#include <TargetConditionals.h>
 
 #include "validators.h"
 #include "typedefs.h"

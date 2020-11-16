@@ -17,6 +17,73 @@
 #include "verbose_printf.h"
 #include "logging_printf.h"
 
+void command(const char *cmd, int argc, char *argv[], int *err, ...) {
+    char *sdk, *toolchain;
+    int verbose, find_only;
+    int error;
+    default_config *our_config;
+
+    char* developer_path;
+
+    developer_path = get_developer_path(&error);
+
+    if (error != SUCCESFUL_OPERATION && err) {
+        *err = error;
+        return;
+    }
+
+    va_list args;
+    va_start(args, err);
+
+    sdk = va_arg(args, char*);
+
+    /* The SDK of the va_arg is empty
+     * so its time to fallback to the default for the platform
+    */
+    if (!sdk) {
+        our_config = get_default_info(&error);
+        if(error != SUCCESFUL_OPERATION && err) {
+            *err = error;
+            return;
+        }
+        sdk = get_sdk_path(developer_path, our_config->sdk, &error);
+        if (error != SUCCESFUL_OPERATION && err) {
+            *err = error;
+            return;
+        }
+    }
+
+    toolchain = va_arg(args, char*);
+    if (!toolchain) {
+        our_config = get_default_info(&error);
+        if(error != SUCCESFUL_OPERATION && err) {
+            *err = error;
+            return;
+        }
+        toolchain = get_toolchain_path(developer_path, our_config->toolchain, &error);
+
+        if (error != SUCCESFUL_OPERATION && err) {
+            *err = error;
+            return;
+        }
+    }
+
+    verbose = va_arg(args, int);
+    if (verbose != 1){
+        verbose = 0;
+    }
+
+    find_only = va_arg(args, int);
+    if (find_only != 1){
+        find_only = 0;
+    }
+
+    va_end(args);
+
+    request_command((bool)verbose, (bool)find_only, cmd, sdk, toolchain, argc, argv, &error);
+
+}
+
 /**
  * @func call_command -- Execute new process to replace this one.
  * @arg cmd - program's absolute path
@@ -54,23 +121,10 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
     envp[2] = (char *) malloc(PATH_MAX - 1);
     envp[3] = (char *) malloc(PATH_MAX - 1);
 
-
-    sprintf(envp[0], "SDKROOT=%s", get_sdk_path(developer_path, current_sdk, &error));
-    if (error != SUCCESFUL_OPERATION) {
-        *err = error;
-        return;
-    }
+    sprintf(envp[0], "SDKROOT=%s", current_sdk);
     sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path,
-            get_toolchain_path(developer_path, current_toolchain, &error), getenv("PATH"));
-    if (error != SUCCESFUL_OPERATION) {
-        *err = error;
-        return;
-    }
-    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/src", get_toolchain_path(developer_path, current_toolchain, &error));
-    if (error != SUCCESFUL_OPERATION) {
-        *err = error;
-        return;
-    }
+            current_toolchain, getenv("PATH"));
+    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
     sprintf(envp[3], "HOME=%s", getenv("HOME"));
 
     if (verbose) {
