@@ -17,6 +17,7 @@ enum microxcode_error_state_t {
     ERROR_GETTING_DEFAULT_CONFIG,
     RUNNING_COMMAND_ERROR,
     PROGRAM_NOT_FOUND,
+    INVALID_KEY_PARSED,
 
 
     // Successful operations start at 30
