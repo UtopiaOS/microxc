@@ -126,7 +126,7 @@ get_sdk_info(const char *path, int *err) {
                                          version,
                                          arch,
                                          deployment_target,
-                                         toolchain, &error);
+                                         &error);
 
     if (config != NULL && err) {
         *err = ERROR_GETTING_SDK;
@@ -196,6 +196,13 @@ get_sdk_path(const char *developer_dir, const char *name, int *err) {
     sprintf(path, "%s/Platforms/%s.Platform/Developer/SDKs/%s.sdk", developer_dir, name, name);
 
     validate_directory_path(path, &error);
+
+    if (error != SUCCESFUL_OPERATION) {
+        if (err) { *err = error; }
+        return NULL;
+    }
+
+    test_sdk_authenticity(path, &error);
 
     if (error != SUCCESFUL_OPERATION) {
         if (err) { *err = error; }

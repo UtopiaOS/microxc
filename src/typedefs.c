@@ -9,7 +9,7 @@
 #include "errors.h"
 
 sdk_config *
-init_sdk_config(const char *name, const char *version, const char *toolchain, const char *default_arch,
+init_sdk_config(const char *name, const char *version, const char *default_arch,
                 const char *deployment_target, int *err) {
     sdk_config *our_sdk_config = malloc(sizeof(sdk_config));
 
@@ -21,7 +21,6 @@ init_sdk_config(const char *name, const char *version, const char *toolchain, co
 
     our_sdk_config->name = name;
     our_sdk_config->version = version;
-    our_sdk_config->toolchain = toolchain;
     our_sdk_config->default_arch = default_arch;
     our_sdk_config->deployment_target = deployment_target;
 

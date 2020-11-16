@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
 
     int error;
-    command("git", argc, argv, &error, NULL, "XcodeDefault", 1, 0);
+    command("clang", argc, argv, &error, NULL, "XcodeDefault", 0, 0);
 
     printf("%d", error);
     return 0;

@@ -9,7 +9,6 @@
 typedef struct {
     const char *name;
     const char *version;
-    const char *toolchain;
     const char *default_arch;
     const char *deployment_target;
 } sdk_config;
@@ -20,7 +19,7 @@ typedef struct {
     const char *toolchain;
 } default_config;
 
-sdk_config *init_sdk_config(const char *, const char *, const char *, const char *, const char *, int *);
+sdk_config *init_sdk_config(const char *, const char *, const char *, const char *, int *);
 
 default_config *init_default_config(const char *, const char *, int *);
 
