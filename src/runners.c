@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <dirent.h>
 
 #include "runners.h"
 #include "getters.h"
@@ -37,10 +38,15 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 
     sdk = va_arg(args, char*);
 
-    /* The SDK of the va_arg is empty
-     * so its time to fallback to the default for the platform
+    /* We have an SDK, now lets call our "get_sdk_path
+     * function, if it is invalid this will return an error
     */
-    if (!sdk) {
+    if (sdk) {
+        sdk = get_sdk_path(developer_path, sdk, &error);
+        if (error != SUCCESFUL_OPERATION){
+            if (err) {*err = error;}
+        }
+    } else {
         our_config = get_default_info(&error);
         if(error != SUCCESFUL_OPERATION && err) {
             *err = error;
