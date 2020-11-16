@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-#include <limits.hadd>
+#include <limits.h>
 
 #include "validators.h"
 #include "typedefs.h"
