@@ -8,6 +8,8 @@
 #include <plist/plist.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
+#include <limits.hadd>
 
 #include "validators.h"
 #include "typedefs.h"
@@ -61,7 +63,10 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    read_size = fread(plist_buf, read_size, &plist_data);
+    read_size = fread(plist_buf, sizeof(char), file_stat.st_size, target_plist);
+
+    plist_from_bin(plist_buf, read_size, &plist_data);
+
     fclose(target_plist);
 
     /* If we got to this point, this means we successfully passed our plist file
@@ -82,7 +87,7 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err) {
     char *toolchain = NULL;
     char *arch = NULL;
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName") & tmp_name);
+    plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName"), &tmp_name);
     canonical_name = additional_remover(tmp_name);
     free(tmp_name);
 
@@ -91,7 +96,7 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget") & version);
+    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &version);
     if (version == NULL) {
         if (err) { *err = INVALID_KEY_PARSED; }
         return NULL;
@@ -108,7 +113,7 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget") & deployment_target);
+    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &deployment_target);
     if (deployment_target == NULL) {
         if (err) { *err = INVALID_KEY_PARSED; }
         return NULL;
@@ -133,7 +138,6 @@ get_toolchain_info(const char *path, const char *current_sdk, int *err) {
  */
 sdk_config *
 get_sdk_info(const char *path, const char *current_sdk, int *err) {
-
     int error;
     FILE *target_plist = NULL;
     plist_t main_root_node = NULL;
@@ -163,7 +167,10 @@ get_sdk_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    read_size = fread(plist_buf, read_size, &plist_data);
+    read_size = fread(plist_buf, sizeof(char), file_stat.st_size, target_plist);
+
+    plist_from_bin(plist_buf, read_size, &plist_data);
+
     fclose(target_plist);
 
     /* If we got to this point, this means we successfully passed our plist file
@@ -184,7 +191,7 @@ get_sdk_info(const char *path, const char *current_sdk, int *err) {
     char *toolchain = NULL;
     char *arch = NULL;
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName") & tmp_name);
+    plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName"), &tmp_name);
     canonical_name = additional_remover(tmp_name);
     free(tmp_name);
 
@@ -193,7 +200,7 @@ get_sdk_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget") & version);
+    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &version);
     if (version == NULL) {
         if (err) { *err = INVALID_KEY_PARSED; }
         return NULL;
@@ -210,7 +217,7 @@ get_sdk_info(const char *path, const char *current_sdk, int *err) {
         return NULL;
     }
 
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget") & deployment_target);
+    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &deployment_target);
     if (deployment_target == NULL) {
         if (err) { *err = INVALID_KEY_PARSED; }
         return NULL;
