@@ -146,10 +146,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     char *cmd = NULL;    /* used to hold our command's absolute path */
     char search_string[PATH_MAX * 1024];    /* our search string */
     int error; /* Check if some error occurred in another function */
-
-    printf("%s\n", current_sdk);
-    printf("%s\n", current_toolchain);
-
+    
     char *developer_path = get_developer_path(&error);
     if (error != SUCCESFUL_OPERATION) {
         if (err) { *err = error; }
@@ -165,11 +162,13 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
             if (access(cmd, (F_OK | X_OK)) != (-1)) {
                 fprintf(stdout, "%s\n", cmd);
                 free(cmd);
-                if (err) {*err = SUCCESFUL_OPERATION; }
+                if (err) { *err = SUCCESFUL_OPERATION; }
                 return;
-            } else if (err) { *err = PROGRAM_NOT_FOUND; }
-            free(cmd);
-            return;
+            } else {
+                if (err) { *err = PROGRAM_NOT_FOUND; }
+                free(cmd);
+                return;
+            }
         } else {
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
             if (error != SUCCESFUL_OPERATION) {
@@ -180,7 +179,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
             /* NO REACH */
             if (verbose) {
                 fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
-                if (err) {*err = EXECUTION_ERROR; }
+                if (err) { *err = EXECUTION_ERROR; }
                 return;
             }
         }
@@ -188,7 +187,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
 
     /* We have searched everywhere, but we haven't found our program. State why. */
     if (verbose) {
-        if (err) {*err = PROGRAM_NOT_FOUND; }
+        if (err) { *err = PROGRAM_NOT_FOUND; }
         fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
         return;
     }
