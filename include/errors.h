@@ -18,6 +18,7 @@ enum microxcode_error_state_t {
     RUNNING_COMMAND_ERROR,
     PROGRAM_NOT_FOUND,
     INVALID_KEY_PARSED,
+    EXECUTION_ERROR,
 
 
     // Successful operations start at 30

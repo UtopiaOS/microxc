@@ -139,7 +139,7 @@ char *search_command(bool verbose, const char *name, char *dirs) {
  * @arg argv -- arguments to be passed if program found
  * @return: -1 on failed search, 0 on successful search, no return on execute
  */
-int
+void
 request_command(bool verbose, bool find_only, const char *name, const char *current_sdk, const char *current_toolchain,
                 int argc,
                 char *argv[], int *err) {
@@ -153,7 +153,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     char *developer_path = get_developer_path(&error);
     if (error != SUCCESFUL_OPERATION) {
         if (err) { *err = error; }
-        return -1;
+        return;
     }
 
     sprintf(search_string, "%s/usr/bin:", developer_path);
@@ -165,31 +165,33 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
             if (access(cmd, (F_OK | X_OK)) != (-1)) {
                 fprintf(stdout, "%s\n", cmd);
                 free(cmd);
-                return 0;
+                if (err) {*err = SUCCESFUL_OPERATION; }
+                return;
             } else if (err) { *err = PROGRAM_NOT_FOUND; }
             free(cmd);
-            return -1;
+            return;
         } else {
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
             if (error != SUCCESFUL_OPERATION) {
                 printf("%d", error);
                 if (err) { *err = error; }
-                return -1;
+                return;
             }
             /* NO REACH */
             if (verbose) {
                 fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
-                return -1;
+                if (err) {*err = EXECUTION_ERROR; }
+                return;
             }
         }
     }
 
     /* We have searched everywhere, but we haven't found our program. State why. */
     if (verbose) {
+        if (err) {*err = PROGRAM_NOT_FOUND; }
         fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
+        return;
     }
 
     if (err) { *err = PROGRAM_NOT_FOUND; }
-
-    return -1;
 }

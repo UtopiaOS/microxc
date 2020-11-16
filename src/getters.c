@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <plist/plist.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
+#include <plist/plist.h>
+#include <sys/stat.h>
 
 #include "validators.h"
 #include "typedefs.h"
