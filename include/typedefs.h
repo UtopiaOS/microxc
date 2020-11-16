@@ -5,12 +5,6 @@
 #ifndef MICROXCODE_TYPEDEFS_H
 #define MICROXCODE_TYPEDEFS_H
 
-/* Toolchain configuration struct */
-typedef struct {
-    const char *name;
-    const char *version;
-} toolchain_config;
-
 /* SDK configuration struct */
 typedef struct {
     const char *name;
@@ -25,8 +19,6 @@ typedef struct {
     const char *sdk;
     const char *toolchain;
 } default_config;
-
-toolchain_config *init_toolchain_config(const char *, const char *, int *);
 
 sdk_config *init_sdk_config(const char *, const char *, const char *, const char *, const char *, int *);
 

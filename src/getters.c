@@ -32,116 +32,15 @@ static char *additional_remover(char *input) {
     return input;
 }
 
-
-toolchain_config *
-get_toolchain_info(const char *path, const char *current_sdk, int *err) {
-    int error;
-    FILE *target_plist = NULL;
-    plist_t main_root_node = NULL;
-    uint32_t read_size = 0;
-    struct stat file_stat;
-    char *plist_buf = NULL;
-    plist_t plist_data = NULL;
-
-    char *sdk_settings_path = NULL;
-
-
-    asprintf(&sdk_settings_path, "%s/SDKSettings.plist", path);
-    target_plist = fopen(sdk_settings_path, "rb");
-
-    if (!target_plist) {
-        if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
-        return NULL;
-    }
-
-    memset(&file_stat, '\0', sizeof(struct stat));
-    fstat(fileno(target_plist), &file_stat);
-
-    plist_buf = (char *) (malloc(sizeof(char) * (file_stat.st_size + 1)));
-    if (plist_buf == NULL) {
-        if (err) { *err = ERROR_ALLOCATING_MEMORY; }
-        free(plist_buf);
-        return NULL;
-    }
-
-    read_size = fread(plist_buf, sizeof(char), file_stat.st_size, target_plist);
-
-    plist_from_bin(plist_buf, read_size, &plist_data);
-
-    fclose(target_plist);
-
-    /* If we got to this point, this means we successfully passed our plist file
-     * now our next objective is reading the dict that is located on the var
-     * target_plist, and getting the necessary information to init our struct
-     */
-
-    if (plist_data == NULL) {
-        if (err) { *err = ERROR_GETTING_SDK; }
-        return NULL;
-    }
-
-    /* Value declaration of expected values to return from plist */
-    char *tmp_name = NULL;
-    char *canonical_name = NULL;
-    char *version = NULL;
-    char *deployment_target = NULL;
-    char *toolchain = NULL;
-    char *arch = NULL;
-
-    plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName"), &tmp_name);
-    canonical_name = additional_remover(tmp_name);
-    free(tmp_name);
-
-    if (canonical_name == NULL) {
-        if (err) { *err = INVALID_KEY_PARSED; }
-        return NULL;
-    }
-
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &version);
-    if (version == NULL) {
-        if (err) { *err = INVALID_KEY_PARSED; }
-        return NULL;
-    }
-
-    // temporal hardcode
-    toolchain = "XcodeDefault";
-
-    plist_get_string_val(plist_array_get_item(plist_dict_get_item(
-            plist_dict_get_item(plist_dict_get_item(target_plist, "SupportedTargets"), canonical_name), "Archs"), 0),
-                         &arch);
-    if (arch == NULL) {
-        if (err) { *err = INVALID_KEY_PARSED; }
-        return NULL;
-    }
-
-    plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &deployment_target);
-    if (deployment_target == NULL) {
-        if (err) { *err = INVALID_KEY_PARSED; }
-        return NULL;
-    }
-
-    toolchain_config *config = init_toolchain_config(version,
-                                                     canonical_name, &error);
-
-    if (config == NULL && err) {
-        if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
-        free(config);
-        return NULL;
-    }
-
-    return config;
-}
-
 /**
  * @func get_sdk_info -- fetch config info from a toolchain's info.ini
  * @arg path - path to sdk's info.ini
  * @return: struct containing sdk config info
  */
 sdk_config *
-get_sdk_info(const char *path, const char *current_sdk, int *err) {
+get_sdk_info(const char *path, int *err) {
     int error;
     FILE *target_plist = NULL;
-    plist_t main_root_node = NULL;
     uint32_t read_size = 0;
     struct stat file_stat;
     char *plist_buf = NULL;

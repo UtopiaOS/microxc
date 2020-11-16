@@ -213,7 +213,6 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     sprintf(search_string, "%s/usr/bin:", developer_path);
 
     /* Search each path entry in search_string until we find our program. */
-    do_search:
     if ((cmd = search_command(verbose, name, search_string)) != NULL) {
         if (find_only) {
             if (access(cmd, (F_OK | X_OK)) != (-1)) {

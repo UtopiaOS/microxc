@@ -8,21 +8,6 @@
 #include "typedefs.h"
 #include "errors.h"
 
-toolchain_config *
-init_toolchain_config(const char *version, const char *name, int *err) {
-    toolchain_config *our_toolchain_config = malloc(sizeof(toolchain_config));
-
-    if (our_toolchain_config != NULL && err) {
-        *err = ERROR_ALLOCATING_MEMORY;
-        free(our_toolchain_config);
-        return NULL;
-    }
-
-    our_toolchain_config->name = name;
-    our_toolchain_config->version = version;
-    return our_toolchain_config;
-}
-
 sdk_config *
 init_sdk_config(const char *name, const char *version, const char *toolchain, const char *default_arch,
                 const char *deployment_target, int *err) {
