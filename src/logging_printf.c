@@ -2,10 +2,10 @@
 // Created by Diego Magdaleno on 11/14/20.
 //
 
-#include "logging_printf.h"
-
 #include <stdio.h>
 #include <stdarg.h>
+
+#include "logging_printf.h"
 
 void logging_printf(FILE *fp, const char *str, ...) {
     va_list args;

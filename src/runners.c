@@ -7,15 +7,12 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
-#include <libgen.h>
 #include <errno.h>
 #include <stdbool.h>
 
 #include "runners.h"
 #include "getters.h"
-#include "stripext.h"
 #include "developer_path.h"
-#include "validators.h"
 #include "errors.h"
 #include "verbose_printf.h"
 #include "logging_printf.h"
@@ -146,7 +143,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     char *cmd = NULL;    /* used to hold our command's absolute path */
     char search_string[PATH_MAX * 1024];    /* our search string */
     int error; /* Check if some error occurred in another function */
-    
+
     char *developer_path = get_developer_path(&error);
     if (error != SUCCESFUL_OPERATION) {
         if (err) { *err = error; }
