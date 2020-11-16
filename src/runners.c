@@ -210,8 +210,8 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
         return;
     }
 
-    sprintf(search_string, "%s/usr/bin:", developer_path);
-
+    sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
+    
     /* Search each path entry in search_string until we find our program. */
     if ((cmd = search_command(verbose, name, search_string)) != NULL) {
         if (find_only) {
@@ -228,7 +228,6 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
         } else {
             call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
             if (error != SUCCESFUL_OPERATION) {
-                printf("%d", error);
                 if (err) { *err = error; }
                 return;
             }
