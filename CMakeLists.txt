@@ -13,16 +13,19 @@ add_library(microxcode SHARED
         src/validators.c
         src/verbose_printf.c)
 
+set(LIBPLIST_INCLUDE "/usr/local/include" CACHE FILEPATH "Sets the libplist include directory")
+set(LIBPLIST_LIB "/usr/local/lib" CACHE FILEPATH "Sets the libplist lib location")
+
 add_library(microxcode::library ALIAS microxcode)
 
 target_include_directories(microxcode
         PUBLIC
         ${PROJECT_SOURCE_DIR}/include
-        /usr/local/include)
+        ${LIBPLIST_INCLUDE})
 
 target_link_directories(microxcode
         PUBLIC
-        /usr/local/lib)
+        ${LIBPLIST_LIB})
 
 target_link_libraries(microxcode
         -lplist-2.0)
