@@ -60,7 +60,13 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
     }
 
     toolchain = va_arg(args, char*);
-    if (!toolchain) {
+
+    if (toolchain) {
+        toolchain = get_toolchain_path(developer_path, toolchain, &error);
+        if (error != SUCCESFUL_OPERATION){
+            if (err) {*err = error;}
+        }
+    } else {
         our_config = get_default_info(&error);
         if(error != SUCCESFUL_OPERATION && err) {
             *err = error;
@@ -74,15 +80,9 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
         }
     }
 
-    verbose = va_arg(args, int);
-    if (verbose != 1){
-        verbose = 0;
-    }
 
+    verbose = va_arg(args, int);
     find_only = va_arg(args, int);
-    if (find_only != 1){
-        find_only = 0;
-    }
 
     va_end(args);
 
@@ -211,7 +211,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     }
 
     sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
-    
+
     /* Search each path entry in search_string until we find our program. */
     if ((cmd = search_command(verbose, name, search_string)) != NULL) {
         if (find_only) {
