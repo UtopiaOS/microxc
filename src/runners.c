@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -16,6 +15,8 @@
 #include "errors.h"
 #include "verbose_printf.h"
 #include "logging_printf.h"
+
+extern char **environ;
 
 void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 	char *sdk, *toolchain;
@@ -86,41 +87,15 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
  * @return: -1 on error, otherwise no return
  */
 void
-callCommand(bool verbose, const char *cmd, const char *currentSdk, const char *currentToolchain, int argc,
-            char **argv, int *err) {
-	int i;
-	char *envp[5] = {NULL};
-	int error;
-
-	char *developerPath = getDeveloperPath(&error);
-	if (error != SUCCESFUL_OPERATION && err) {
-		*err = error;
-		return;
-	}
-
-	/*
-	 * Pass SDKROOT, PATH, HOME, LD_LIBRARY_PATH, TARGET_TRIPLE, and MACOSX_DEPLOYMENT_TARGET to the called program's environment.
-	 *
-	 * > SDKROOT is used for when programs such as clang need to know the location of the sdk.
-	 * > PATH is used for when programs such as clang need to call on another program (such as the linker).
-	 * > HOME is used for recursive calls to xcrun (such as when xcrun calls a script calling xcrun ect).
-	 * > LD_LIBRARY_PATH is used for when tools needs to access libraries that are specific to the toolchain.
-	 * > TARGET_TRIPLE is used for clang/clang++ cross compilation when building on a foreign host.
-	 * > {MACOSX|IOS}_DEPLOYMENT_TARGET is used for tools like ld that need to set the minimum compatibility
-	 *   version number for a linked binary.
-	 */
-
-	asprintf(&envp[0], "SDKROOT=%s", currentSdk);
-	asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developerPath, currentToolchain, getenv("PATH"));
-	asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", currentToolchain);
-	asprintf(&envp[3], "HOME=%s", getenv("HOME"));
+callCommand(bool verbose, const char *cmd, int argc, char **argv, int *err) {
 	if (verbose) {
 		loggingPrintf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
-		for (i = 1; i < argc; i++)
+		for (int i = 1; i < argc; i++)
 			loggingPrintf(stdout, " %s", argv[i]);
 		loggingPrintf(stdout, "\"\n");
 	}
-	if (execve(cmd, argv, envp) == -1) {
+	/* We run with environ as the Apple implementation replicates the environment variables */
+	if (execve(cmd, argv, environ) == -1) {
 		if (err) { *err = RUNNING_COMMAND_ERROR; }
 		return;
 	}
@@ -230,7 +205,7 @@ requestCommand(bool verbose, const char *name, const char *currentSdk, const cha
 		if (err) { *err = error; }
 		return;
 	}
-	
+
 
 	/* We have searched everywhere, but we haven't found our program. State why. */
 	if (verbose) {

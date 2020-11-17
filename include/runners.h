@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-void callCommand(bool, const char *, const char *, const char *, int argc, char **argv, int *);
+void callCommand(bool, const char *, int argc, char **argv, int *);
 
 char *searchCommand(bool, const char *, char *, int *);
 
