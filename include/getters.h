@@ -14,5 +14,4 @@ char *getSdkPath(const char *, const char *, int *);
 sdk_config *get_sdk_info(const char *, int *);
 
 default_config *getDefaultInfo(int *);
-
 #endif //MICROXCODE_GETTERS_H

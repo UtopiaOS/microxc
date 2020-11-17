@@ -9,10 +9,9 @@
 
 void callCommand(bool, const char *, const char *, const char *, int argc, char **argv, int *);
 
-char *searchCommand(bool, const char *, char *, int*);
+char *searchCommand(bool, const char *, char *, int *);
 
-void requestCommand(bool, bool, const char *, const char *, const char *, int argc, char **argv, int *);
+void requestCommand(bool, const char *, const char *, const char *, int argc, char **argv, int *);
 
-void command(const char* cmd, int argc, char *argv[], int *, ...);
-
+void command(const char *cmd, int argc, char *argv[], int *, ...);
 #endif //MICROXCODE_RUNNERS_H

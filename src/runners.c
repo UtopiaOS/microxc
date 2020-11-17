@@ -192,7 +192,7 @@ char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
  * @return: -1 on failed search, 0 on successful search, no return on execute
  */
 void
-requestCommand(bool verbose, bool findOnly, const char *name, const char *currentSdk, const char *currentToolchain,
+requestCommand(bool verbose, const char *name, const char *currentSdk, const char *currentToolchain,
                int argc,
                char **argv, int *err) {
 	char *searchString;
@@ -212,8 +212,9 @@ requestCommand(bool verbose, bool findOnly, const char *name, const char *curren
 	 * /usr/bin paths, this are later separated in the searchCommand function. Since this is a memory
 	 * allocation we check if asprintf returned -1 if so we free the memory and return an error
 	 */
-	int success = asprintf(&searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk, currentToolchain);
-	if (success == -1){
+	int success = asprintf(&searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk,
+	                       currentToolchain);
+	if (success == -1) {
 		if (err) { *err = ERROR_ALLOCATING_MEMORY; }
 		return;
 	}
@@ -222,26 +223,11 @@ requestCommand(bool verbose, bool findOnly, const char *name, const char *curren
 
 	char *cmd = searchCommand(verbose, name, searchString, &error);
 	if (cmd == NULL && error != SUCCESFUL_OPERATION) {
-		if (err) {*err = PROGRAM_NOT_FOUND; }
+		if (err) { *err = PROGRAM_NOT_FOUND; }
 		return;
 	}
-
-	/*! This is most likely better if moved into its own function */
-	if (findOnly) {
-		if (access(cmd, (F_OK | X_OK)) != -1) {
-			fprintf(stdout, "%s\n", cmd);
-			free(cmd);
-			if (err) { *err = SUCCESFUL_OPERATION; }
-			return;
-		}
-	} else {
-		if (err) {*err = PROGRAM_NOT_FOUND;}
-		free(cmd);
-		return;
-	}
-
 	callCommand(verbose, cmd, currentSdk, currentToolchain, argc, argv, &error);
-		if (error != SUCCESFUL_OPERATION) {
+	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return;
 	}

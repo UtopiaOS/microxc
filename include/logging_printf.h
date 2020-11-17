@@ -8,5 +8,4 @@
 #include<stdio.h>
 
 void loggingPrintf(FILE *fp, const char *str, ...);
-
 #endif //MICROXCODE_LOGGING_PRINTF_H
