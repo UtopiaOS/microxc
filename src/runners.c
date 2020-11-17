@@ -136,7 +136,6 @@ callCommand(bool verbose, const char *cmd, const char *currentSdk, const char *c
  */
 char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
 	char *cmd = NULL;    /* command's absolute path */
-	char *abslPath = NULL;        /* path entry to search */
 	char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
 	char **possible = NULL;
 	int pathCount = 0, i;
@@ -144,7 +143,7 @@ char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
 	cmd = (char *) malloc(PATH_MAX - 1);
 
 	/* Get an array of all the possible places the command could be */
-	abslPath = strtok(dirs, delimiter);
+	char *abslPath = strtok(dirs, delimiter);
 	while (abslPath != NULL) {
 		possible = realloc(possible, sizeof(char *) * ++pathCount); /* Resize our "array" */
 
@@ -196,43 +195,57 @@ void
 requestCommand(bool verbose, bool findOnly, const char *name, const char *currentSdk, const char *currentToolchain,
                int argc,
                char **argv, int *err) {
-	char *cmd = NULL;    /* used to hold our command's absolute path */
-	char searchString[PATH_MAX * 1024];    /* our search string */
+	char *searchString;
 	int error; /* Check if some error occurred in another function */
 
+	/* Here we get our developerPath, if this is NULL
+	 * we return so we stop executing the code and
+	 * we also assign the proper error code
+	*/
 	char *developerPath = getDeveloperPath(&error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return;
 	}
-	sprintf(searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk, currentToolchain);
+
+	/* Now we populate our "searchString" with the developer path, currentSdk and currentToolchain
+	 * /usr/bin paths, this are later separated in the searchCommand function. Since this is a memory
+	 * allocation we check if asprintf returned -1 if so we free the memory and return an error
+	 */
+	int success = asprintf(&searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk, currentToolchain);
+	if (success == -1){
+		if (err) { *err = ERROR_ALLOCATING_MEMORY; }
+		return;
+	}
 
 	/* Search each path entry in searchString until we find our program. */
-	if ((cmd = searchCommand(verbose, name, searchString, &error)) != NULL) {
-		if (findOnly) {
-			if (access(cmd, (F_OK | X_OK)) != (-1)) {
-				fprintf(stdout, "%s\n", cmd);
-				free(cmd);
-				if (err) { *err = SUCCESFUL_OPERATION; }
-				return;
-			} else {
-				if (err) { *err = PROGRAM_NOT_FOUND; }
-				free(cmd);
-				return;
-			}
-		} else {
-			callCommand(verbose, cmd, currentSdk, currentToolchain, argc, argv, &error);
-			if (error != SUCCESFUL_OPERATION) {
-				if (err) { *err = error; }
-				return;
-			}
-			/* NO REACH */
-			if (verbose) {
-				fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
-				if (err) { *err = EXECUTION_ERROR; }
-			}
-		}
+
+	char *cmd = searchCommand(verbose, name, searchString, &error);
+	if (cmd == NULL && error != SUCCESFUL_OPERATION) {
+		if (err) {*err = PROGRAM_NOT_FOUND; }
+		return;
 	}
+
+	/*! This is most likely better if moved into its own function */
+	if (findOnly) {
+		if (access(cmd, (F_OK | X_OK)) != -1) {
+			fprintf(stdout, "%s\n", cmd);
+			free(cmd);
+			if (err) { *err = SUCCESFUL_OPERATION; }
+			return;
+		}
+	} else {
+		if (err) {*err = PROGRAM_NOT_FOUND;}
+		free(cmd);
+		return;
+	}
+
+	callCommand(verbose, cmd, currentSdk, currentToolchain, argc, argv, &error);
+		if (error != SUCCESFUL_OPERATION) {
+		if (err) { *err = error; }
+		return;
+	}
+
 
 	/* We have searched everywhere, but we haven't found our program. State why. */
 	if (verbose) {
