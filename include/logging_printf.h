@@ -7,6 +7,6 @@
 
 #include<stdio.h>
 
-void logging_printf(FILE *, const char *str, ...);
+void loggingPrintf(FILE *fp, const char *str, ...);
 
 #endif //MICROXCODE_LOGGING_PRINTF_H

@@ -19,12 +19,12 @@
 
 void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 	char *sdk, *toolchain;
-	int verbose, find_only;
+	int verbose, findOnly;
 	int error;
-	default_config *our_config;
+	default_config *ourConfig;
 
-	char *developer_path;
-	developer_path = get_developer_path(&error);
+	char *developerPath;
+	developerPath = getDeveloperPath(&error);
 	if (error != SUCCESFUL_OPERATION && err) {
 		*err = error;
 		return;
@@ -33,21 +33,21 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 	va_start(args, err);
 	sdk = va_arg(args, char*);
 
-	/* We have an SDK, now lets call our "get_sdk_path
+	/* We have an SDK, now lets call our "getSdkPath
 	 * function, if it is invalid this will return an error
 	*/
 	if (sdk) {
-		sdk = get_sdk_path(developer_path, sdk, &error);
+		sdk = getSdkPath(developerPath, sdk, &error);
 		if (error != SUCCESFUL_OPERATION) {
 			if (err) { *err = error; }
 		}
 	} else {
-		our_config = get_default_info(&error);
+		ourConfig = getDefaultInfo(&error);
 		if (error != SUCCESFUL_OPERATION && err) {
 			*err = error;
 			return;
 		}
-		sdk = get_sdk_path(developer_path, our_config->sdk, &error);
+		sdk = getSdkPath(developerPath, ourConfig->sdk, &error);
 		if (error != SUCCESFUL_OPERATION && err) {
 			*err = error;
 			return;
@@ -55,45 +55,45 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 	}
 	toolchain = va_arg(args, char*);
 	if (toolchain) {
-		toolchain = get_toolchain_path(developer_path, toolchain, &error);
+		toolchain = getToolchainPath(developerPath, toolchain, &error);
 		if (error != SUCCESFUL_OPERATION) {
 			if (err) { *err = error; }
 		}
 	} else {
-		our_config = get_default_info(&error);
+		ourConfig = getDefaultInfo(&error);
 		if (error != SUCCESFUL_OPERATION && err) {
 			*err = error;
 			return;
 		}
-		toolchain = get_toolchain_path(developer_path, our_config->toolchain, &error);
+		toolchain = getToolchainPath(developerPath, ourConfig->toolchain, &error);
 		if (error != SUCCESFUL_OPERATION && err) {
 			*err = error;
 			return;
 		}
 	}
 	verbose = va_arg(args, int);
-	find_only = va_arg(args, int);
+	findOnly = va_arg(args, int);
 	va_end(args);
-	request_command((bool) verbose, (bool) find_only, cmd, sdk, toolchain, argc, argv, &error);
+	requestCommand((bool) verbose, (bool) findOnly, cmd, sdk, toolchain, argc, argv, &error);
 	if (err) { *err = error; }
 
 }
 
 /**
- * @func call_command -- Execute new process to replace this one.
+ * @func callCommand -- Execute new process to replace this one.
  * @arg cmd - program's absolute path
  * @arg argc - number of arguments to be passed to new process
  * @arg argv - arguments to be passed to new process
  * @return: -1 on error, otherwise no return
  */
 void
-call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc,
-             char *argv[], int *err) {
+callCommand(bool verbose, const char *cmd, const char *currentSdk, const char *currentToolchain, int argc,
+            char **argv, int *err) {
 	int i;
 	char *envp[5] = {NULL};
 	int error;
 
-	char *developer_path = get_developer_path(&error);
+	char *developerPath = getDeveloperPath(&error);
 	if (error != SUCCESFUL_OPERATION && err) {
 		*err = error;
 		return;
@@ -111,15 +111,15 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
 	 *   version number for a linked binary.
 	 */
 
-	asprintf(&envp[0], "SDKROOT=%s", current_sdk);
-	asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, current_toolchain, getenv("PATH"));
-	asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
+	asprintf(&envp[0], "SDKROOT=%s", currentSdk);
+	asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developerPath, currentToolchain, getenv("PATH"));
+	asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", currentToolchain);
 	asprintf(&envp[3], "HOME=%s", getenv("HOME"));
 	if (verbose) {
-		logging_printf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
+		loggingPrintf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
 		for (i = 1; i < argc; i++)
-			logging_printf(stdout, " %s", argv[i]);
-		logging_printf(stdout, "\"\n");
+			loggingPrintf(stdout, " %s", argv[i]);
+		loggingPrintf(stdout, "\"\n");
 	}
 	if (execve(cmd, argv, envp) == -1) {
 		if (err) { *err = RUNNING_COMMAND_ERROR; }
@@ -129,54 +129,54 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
 }
 
 /**
- * @func search_command -- Search a set of directories for a given command
+ * @func searchCommand -- Search a set of directories for a given command
  * @arg name - program's name
  * @arg dirs - set of directories to search, separated by colons
  * @return: the program's absolute path on success, NULL on failure
  */
-char *search_command(bool verbose, const char *name, char *dirs, int *err) {
+char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
 	char *cmd = NULL;    /* command's absolute path */
-	char *absl_path = NULL;        /* path entry to search */
+	char *abslPath = NULL;        /* path entry to search */
 	char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
 	char **possible = NULL;
-	int str_spaces = 0, i;
+	int pathCount = 0, i;
 	char *command = NULL;
 	cmd = (char *) malloc(PATH_MAX - 1);
 
 	/* Get an array of all the possible places the command could be */
-	absl_path = strtok(dirs, delimiter);
-	while (absl_path != NULL) {
-		possible = realloc(possible, sizeof(char *) * ++str_spaces); /* Resize our "array" */
+	abslPath = strtok(dirs, delimiter);
+	while (abslPath != NULL) {
+		possible = realloc(possible, sizeof(char *) * ++pathCount); /* Resize our "array" */
 
 		if (possible == NULL) {
 			if (err) { *err = ERROR_ALLOCATING_MEMORY; }
 			return NULL; /*Memory allocation failed */
 		}
 		if (verbose) {
-			verbose_printf(stderr, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path,
-			               name);
+			verbosePrintf(stderr, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", abslPath,
+			              name);
 		}
 
 		/* Construct our program's absolute path, and append it to array */
-		sprintf(cmd, "%s/%s", absl_path, name);
-		possible[str_spaces - 1] = cmd;
+		sprintf(cmd, "%s/%s", abslPath, name);
+		possible[pathCount - 1] = cmd;
 
 		/* Move to the next entry */
-		absl_path = strtok(NULL, delimiter);
+		abslPath = strtok(NULL, delimiter);
 	}
 
 	/* Free the cmd allocation as we don't need it anymore */
 	free(cmd);
 
 	/* reallocate one extra element for the last NULL */
-	possible = realloc(possible, sizeof(char *) * (str_spaces + 1));
-	possible[str_spaces] = 0;
+	possible = realloc(possible, sizeof(char *) * (pathCount + 1));
+	possible[pathCount] = 0;
 
 	/* Iterate over the array, until we find a command that meets the criteria */
-	for (i = 0; i < (str_spaces + 1); ++i) {
+	for (i = 0; i < (pathCount + 1); ++i) {
 		if (access(possible[i], (F_OK | X_OK)) != (-1)) {
 			if (verbose) {
-				verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
+				verbosePrintf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
 			}
 			command = possible[i];
 			break;
@@ -187,29 +187,29 @@ char *search_command(bool verbose, const char *name, char *dirs, int *err) {
 }
 
 /**
- * @func request_command - Request a program.
+ * @func requestCommand - Request a program.
  * @arg name -- name of program
  * @arg argv -- arguments to be passed if program found
  * @return: -1 on failed search, 0 on successful search, no return on execute
  */
 void
-request_command(bool verbose, bool find_only, const char *name, const char *current_sdk, const char *current_toolchain,
-                int argc,
-                char *argv[], int *err) {
+requestCommand(bool verbose, bool findOnly, const char *name, const char *currentSdk, const char *currentToolchain,
+               int argc,
+               char **argv, int *err) {
 	char *cmd = NULL;    /* used to hold our command's absolute path */
-	char search_string[PATH_MAX * 1024];    /* our search string */
+	char searchString[PATH_MAX * 1024];    /* our search string */
 	int error; /* Check if some error occurred in another function */
 
-	char *developer_path = get_developer_path(&error);
+	char *developerPath = getDeveloperPath(&error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return;
 	}
-	sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
+	sprintf(searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk, currentToolchain);
 
-	/* Search each path entry in search_string until we find our program. */
-	if ((cmd = search_command(verbose, name, search_string, &error)) != NULL) {
-		if (find_only) {
+	/* Search each path entry in searchString until we find our program. */
+	if ((cmd = searchCommand(verbose, name, searchString, &error)) != NULL) {
+		if (findOnly) {
 			if (access(cmd, (F_OK | X_OK)) != (-1)) {
 				fprintf(stdout, "%s\n", cmd);
 				free(cmd);
@@ -221,7 +221,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
 				return;
 			}
 		} else {
-			call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
+			callCommand(verbose, cmd, currentSdk, currentToolchain, argc, argv, &error);
 			if (error != SUCCESFUL_OPERATION) {
 				if (err) { *err = error; }
 				return;

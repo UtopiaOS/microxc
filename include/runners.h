@@ -7,11 +7,11 @@
 
 #include <stdbool.h>
 
-void call_command(bool, const char *, const char *, const char *, int argc, char *argv[], int *);
+void callCommand(bool, const char *, const char *, const char *, int argc, char **argv, int *);
 
-char *search_command(bool, const char *, char *, int*);
+char *searchCommand(bool, const char *, char *, int*);
 
-void request_command(bool, bool, const char *, const char *, const char *, int argc, char *argv[], int *);
+void requestCommand(bool, bool, const char *, const char *, const char *, int argc, char **argv, int *);
 
 void command(const char* cmd, int argc, char *argv[], int *, ...);
 

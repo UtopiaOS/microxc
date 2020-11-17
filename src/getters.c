@@ -38,76 +38,76 @@ static char *additional_remover(char *input) {
 sdk_config *
 get_sdk_info(const char *path, int *err) {
 	int error;
-	uint32_t read_size = 0;
-	struct stat file_stat;
-	char *plist_buf = NULL;
-	plist_t plist_data = NULL;
+	uint32_t readSize = 0;
+	struct stat fileStat;
+	char *plistBuf = NULL;
+	plist_t plistData = NULL;
 
-	char *sdk_settings_path = NULL;
-	asprintf(&sdk_settings_path, "%s/SDKSettings.plist", path);
-	FILE *target_plist = fopen(sdk_settings_path, "rb");
-	if (!target_plist) {
+	char *sdkSettingsPath = NULL;
+	asprintf(&sdkSettingsPath, "%s/SDKSettings.plist", path);
+	FILE *targetPlist = fopen(sdkSettingsPath, "rb");
+	if (!targetPlist) {
 		if (err) { *err = ERROR_GETTING_TOOLCHAIN; }
 		return NULL;
 	}
-	memset(&file_stat, '\0', sizeof(struct stat));
-	fstat(fileno(target_plist), &file_stat);
-	plist_buf = (char *) (malloc(sizeof(char) * (file_stat.st_size + 1)));
-	if (plist_buf == NULL) {
+	memset(&fileStat, '\0', sizeof(struct stat));
+	fstat(fileno(targetPlist), &fileStat);
+	plistBuf = (char *) (malloc(sizeof(char) * (fileStat.st_size + 1)));
+	if (plistBuf == NULL) {
 		if (err) { *err = ERROR_ALLOCATING_MEMORY; }
-		free(plist_buf);
+		free(plistBuf);
 		return NULL;
 	}
-	read_size = fread(plist_buf, sizeof(char), file_stat.st_size, target_plist);
-	plist_from_bin(plist_buf, read_size, &plist_data);
-	fclose(target_plist);
+	readSize = fread(plistBuf, sizeof(char), fileStat.st_size, targetPlist);
+	plist_from_bin(plistBuf, readSize, &plistData);
+	fclose(targetPlist);
 
 	/* If we got to this point, this means we successfully passed our plist file
 	 * now our next objective is reading the dict that is located on the var
-	 * target_plist, and getting the necessary information to init our struct
+	 * targetPlist, and getting the necessary information to init our struct
 	 */
 
-	if (plist_data == NULL) {
+	if (plistData == NULL) {
 		if (err) { *err = ERROR_GETTING_SDK; }
 		return NULL;
 	}
 
 
 	/* Value declaration of expected values to return from plist */
-	char *tmp_name = NULL;
-	char *canonical_name = NULL;
+	char *tmpName = NULL;
+	char *canonicalName = NULL;
 	char *version = NULL;
-	char *deployment_target = NULL;
+	char *deploymentTarget = NULL;
 	char *arch = NULL;
-	plist_get_string_val(plist_dict_get_item(plist_data, "CanonicalName"), &tmp_name);
-	canonical_name = additional_remover(tmp_name);
-	free(tmp_name);
-	if (canonical_name == NULL) {
+	plist_get_string_val(plist_dict_get_item(plistData, "CanonicalName"), &tmpName);
+	canonicalName = additional_remover(tmpName);
+	free(tmpName);
+	if (canonicalName == NULL) {
 		if (err) { *err = INVALID_KEY_PARSED; }
 		return NULL;
 	}
-	plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &version);
+	plist_get_string_val(plist_dict_get_item(plistData, "DefaultDeploymentTarget"), &version);
 	if (version == NULL) {
 		if (err) { *err = INVALID_KEY_PARSED; }
 		return NULL;
 	}
 	plist_get_string_val(plist_array_get_item(plist_dict_get_item(
-			plist_dict_get_item(plist_dict_get_item(target_plist, "SupportedTargets"), canonical_name), "Archs"), 0),
+			plist_dict_get_item(plist_dict_get_item(targetPlist, "SupportedTargets"), canonicalName), "Archs"), 0),
 	                     &arch);
 	if (arch == NULL) {
 		if (err) { *err = INVALID_KEY_PARSED; }
 		return NULL;
 	}
-	plist_get_string_val(plist_dict_get_item(plist_data, "DefaultDeploymentTarget"), &deployment_target);
-	if (deployment_target == NULL) {
+	plist_get_string_val(plist_dict_get_item(plistData, "DefaultDeploymentTarget"), &deploymentTarget);
+	if (deploymentTarget == NULL) {
 		if (err) { *err = INVALID_KEY_PARSED; }
 		return NULL;
 	}
-	sdk_config *config = init_sdk_config(canonical_name,
-	                                     version,
-	                                     arch,
-	                                     deployment_target,
-	                                     &error);
+	sdk_config *config = initSdkConfig(canonicalName,
+	                                   version,
+	                                   arch,
+	                                   deploymentTarget,
+	                                   &error);
 	if (config != NULL && err) {
 		*err = ERROR_GETTING_SDK;
 		return NULL;
@@ -116,23 +116,23 @@ get_sdk_info(const char *path, int *err) {
 }
 
 default_config *
-get_default_info(int *err) {
-	char *supposed_name;
+getDefaultInfo(int *err) {
+	char *supposedName;
 	int error;
 #if TARGET_OS_IPHONE
-	supposed_name = "iPhoneOS";
+	supposedName = "iPhoneOS";
 #elif TARGET_OS_MAC
-	supposed_name = "MacOSX";
+	supposedName = "MacOSX";
 #else
-	supposed_name = NULL;
+	supposedName = NULL;
 #endif
-	if (supposed_name == NULL) {
+	if (supposedName == NULL) {
 		if (err) { *err = UNSUPPORTED_PLATFORM; }
 		return NULL;
 	}
 
 	// TODO: Unhardcode this! This is only temporal!
-	default_config *config = init_default_config(supposed_name, "XcodeDefault", &error);
+	default_config *config = initDefaultConfig(supposedName, "XcodeDefault", &error);
 	if (config == NULL && err) {
 		*err = ERROR_GETTING_DEFAULT_CONFIG;
 		return NULL;
@@ -141,12 +141,12 @@ get_default_info(int *err) {
 }
 
 char *
-get_toolchain_path(const char *developer_dir, const char *name, int *err) {
+getToolchainPath(const char *developerDir, const char *name, int *err) {
 	char *path = NULL;
 	int error;
 	path = (char *) malloc(PATH_MAX - 1);
-	sprintf(path, "%s/Toolchains/%s.xctoolchain", developer_dir, name);
-	validate_directory_path(path, &error);
+	sprintf(path, "%s/Toolchains/%s.xctoolchain", developerDir, name);
+	validateDirectoryPath(path, &error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return NULL;
@@ -157,17 +157,17 @@ get_toolchain_path(const char *developer_dir, const char *name, int *err) {
 }
 
 char *
-get_sdk_path(const char *developer_dir, const char *name, int *err) {
+getSdkPath(const char *developerDir, const char *name, int *err) {
 	char *path = NULL;
 	int error;
 	path = (char *) malloc(PATH_MAX - 1);
-	sprintf(path, "%s/Platforms/%s.Platform/Developer/SDKs/%s.sdk", developer_dir, name, name);
-	validate_directory_path(path, &error);
+	sprintf(path, "%s/Platforms/%s.Platform/Developer/SDKs/%s.sdk", developerDir, name, name);
+	validateDirectoryPath(path, &error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return NULL;
 	}
-	test_sdk_authenticity(path, &error);
+	testSdkAuthenticity(path, &error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return NULL;

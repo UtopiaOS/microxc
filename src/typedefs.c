@@ -8,30 +8,30 @@
 #include "errors.h"
 
 sdk_config *
-init_sdk_config(const char *name, const char *version, const char *default_arch,
-                const char *deployment_target, int *err) {
-	sdk_config *our_sdk_config = malloc(sizeof(sdk_config));
-	if (our_sdk_config == NULL && err) {
+initSdkConfig(const char *name, const char *version, const char *defaultArch,
+              const char *deploymentTarget, int *err) {
+	sdk_config *ourSdkConfig = malloc(sizeof(sdk_config));
+	if (ourSdkConfig == NULL && err) {
 		*err = ERROR_ALLOCATING_MEMORY;
-		free(our_sdk_config);
+		free(ourSdkConfig);
 		return NULL;
 	}
-	our_sdk_config->name = name;
-	our_sdk_config->version = version;
-	our_sdk_config->default_arch = default_arch;
-	our_sdk_config->deployment_target = deployment_target;
-	return our_sdk_config;
+	ourSdkConfig->name = name;
+	ourSdkConfig->version = version;
+	ourSdkConfig->default_arch = defaultArch;
+	ourSdkConfig->deployment_target = deploymentTarget;
+	return ourSdkConfig;
 }
 
 default_config *
-init_default_config(const char *sdk, const char *toolchain, int *err) {
-	default_config *our_default_config = malloc(sizeof(default_config));
-	if (our_default_config == NULL && err) {
+initDefaultConfig(const char *sdk, const char *toolchain, int *err) {
+	default_config *ourDefaultConfig = malloc(sizeof(default_config));
+	if (ourDefaultConfig == NULL && err) {
 		*err = ERROR_ALLOCATING_MEMORY;
-		free(our_default_config);
+		free(ourDefaultConfig);
 		return NULL;
 	}
-	our_default_config->toolchain = toolchain;
-	our_default_config->sdk = sdk;
-	return our_default_config;
+	ourDefaultConfig->toolchain = toolchain;
+	ourDefaultConfig->sdk = sdk;
+	return ourDefaultConfig;
 }

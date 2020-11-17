@@ -1,4 +1,4 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void verbose_printf(FILE*, const char* , ...);
+void verbosePrintf(FILE *fp, const char *str, ...);

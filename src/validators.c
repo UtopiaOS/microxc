@@ -11,7 +11,7 @@
 #include "errors.h"
 
 void
-test_sdk_authenticity(const char *path, int *err) {
+testSdkAuthenticity(const char *path, int *err) {
 	char *fname = NULL;
 	fname = (char *) malloc(PATH_MAX - 1);
 	sprintf(fname, "%s/SDKSettings.plist", path);
@@ -22,7 +22,7 @@ test_sdk_authenticity(const char *path, int *err) {
 }
 
 void
-validate_directory_path(const char *dir, int *err) {
+validateDirectoryPath(const char *dir, int *err) {
 	struct stat fstat;
 	if (stat(dir, &fstat) != 0) {
 		if (err) { *err = UNABLE_TO_VALIDATE; }
