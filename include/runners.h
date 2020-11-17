@@ -9,7 +9,7 @@
 
 void call_command(bool, const char *, const char *, const char *, int argc, char *argv[], int *);
 
-char *search_command(bool, const char *, char *);
+char *search_command(bool, const char *, char *, int*);
 
 void request_command(bool, bool, const char *, const char *, const char *, int argc, char *argv[], int *);
 

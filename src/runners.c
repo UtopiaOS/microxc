@@ -24,7 +24,7 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
     int error;
     default_config *our_config;
 
-    char* developer_path;
+    char *developer_path;
 
     developer_path = get_developer_path(&error);
 
@@ -43,12 +43,12 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
     */
     if (sdk) {
         sdk = get_sdk_path(developer_path, sdk, &error);
-        if (error != SUCCESFUL_OPERATION){
-            if (err) {*err = error;}
+        if (error != SUCCESFUL_OPERATION) {
+            if (err) { *err = error; }
         }
     } else {
         our_config = get_default_info(&error);
-        if(error != SUCCESFUL_OPERATION && err) {
+        if (error != SUCCESFUL_OPERATION && err) {
             *err = error;
             return;
         }
@@ -63,12 +63,12 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 
     if (toolchain) {
         toolchain = get_toolchain_path(developer_path, toolchain, &error);
-        if (error != SUCCESFUL_OPERATION){
-            if (err) {*err = error;}
+        if (error != SUCCESFUL_OPERATION) {
+            if (err) { *err = error; }
         }
     } else {
         our_config = get_default_info(&error);
-        if(error != SUCCESFUL_OPERATION && err) {
+        if (error != SUCCESFUL_OPERATION && err) {
             *err = error;
             return;
         }
@@ -86,7 +86,8 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 
     va_end(args);
 
-    request_command((bool)verbose, (bool)find_only, cmd, sdk, toolchain, argc, argv, &error);
+    request_command((bool) verbose, (bool) find_only, cmd, sdk, toolchain, argc, argv, &error);
+    if (err) { *err = error; }
 
 }
 
@@ -101,7 +102,7 @@ void
 call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc,
              char *argv[], int *err) {
     int i;
-    char *envp[7] = {NULL};
+    char *envp[5] = {NULL};
     int error;
 
     char *developer_path = get_developer_path(&error);
@@ -122,16 +123,11 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
      * > {MACOSX|IOS}_DEPLOYMENT_TARGET is used for tools like ld that need to set the minimum compatibility
      *   version number for a linked binary.
      */
-    envp[0] = (char *) malloc(PATH_MAX - 1);
-    envp[1] = (char *) malloc(PATH_MAX - 1);
-    envp[2] = (char *) malloc(PATH_MAX - 1);
-    envp[3] = (char *) malloc(PATH_MAX - 1);
 
-    sprintf(envp[0], "SDKROOT=%s", current_sdk);
-    sprintf(envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path,
-            current_toolchain, getenv("PATH"));
-    sprintf(envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
-    sprintf(envp[3], "HOME=%s", getenv("HOME"));
+    asprintf(&envp[0], "SDKROOT=%s", current_sdk);
+    asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, current_toolchain, getenv("PATH"));
+    asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
+    asprintf(&envp[3], "HOME=%s", getenv("HOME"));
 
     if (verbose) {
         logging_printf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
@@ -140,8 +136,6 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
         logging_printf(stdout, "\"\n");
     }
 
-
-    printf("%s", cmd);
     if (execve(cmd, argv, envp) == -1) {
         if (err) { *err = RUNNING_COMMAND_ERROR; }
         return;
@@ -156,38 +150,62 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  * @arg dirs - set of directories to search, separated by colons
  * @return: the program's absolute path on success, NULL on failure
  */
-char *search_command(bool verbose, const char *name, char *dirs) {
+char *search_command(bool verbose, const char *name, char *dirs, int *err) {
     char *cmd = NULL;    /* command's absolute path */
     char *absl_path = NULL;        /* path entry to search */
     char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
+    char **possible = NULL;
+    int str_spaces = 0, i;
+    char *command = NULL;
 
-    /* Allocate space for the program's absolute path */
     cmd = (char *) malloc(PATH_MAX - 1);
 
-    /* Search each path entry in dirs until we find our program. */
+    /* Get an array of all the possible places the command could be */
     absl_path = strtok(dirs, delimiter);
+
+
     while (absl_path != NULL) {
+
+        possible = realloc(possible, sizeof(char *) * ++str_spaces); /* Resize our "array" */
+
+        if (possible == NULL) {
+            if (err) { *err = ERROR_ALLOCATING_MEMORY; }
+            return NULL; /*Memory allocation failed */
+        }
+
         if (verbose) {
-            verbose_printf(stdout, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path,
+            verbose_printf(stderr, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path,
                            name);
         }
 
-        /* Construct our program's absolute path. */
+        /* Construct our program's absolute path, and append it to array */
         sprintf(cmd, "%s/%s", absl_path, name);
+        possible[str_spaces - 1] = cmd;
 
-        /* Does it exist? Is it an executable? */
-        if (access(cmd, (F_OK | X_OK)) != (-1)) {
-            if (verbose) {
-                verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", cmd);
-            }
-            break;
-        }
-
-        /* If not, move onto the next entry.. */
+        /* Move to the next entry */
         absl_path = strtok(NULL, delimiter);
     }
 
-    return cmd;
+    /* Free the cmd allocation as we don't need it anymore */
+    free(cmd);
+
+    /* reallocate one extra element for the last NULL */
+    possible = realloc(possible, sizeof(char *) * (str_spaces + 1));
+    possible[str_spaces] = 0;
+
+    /* Iterate over the array, until we find a command that meets the criteria */
+    for (i = 0; i < (str_spaces + 1); ++i) {
+        if (access(possible[i], (F_OK | X_OK)) != (-1)) {
+            if (verbose) {
+                verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
+            }
+            command = possible[i];
+            break;
+        }
+    }
+
+    free(possible);
+    return command;
 }
 
 /**
@@ -213,7 +231,7 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
 
     /* Search each path entry in search_string until we find our program. */
-    if ((cmd = search_command(verbose, name, search_string)) != NULL) {
+    if ((cmd = search_command(verbose, name, search_string, &error)) != NULL) {
         if (find_only) {
             if (access(cmd, (F_OK | X_OK)) != (-1)) {
                 fprintf(stdout, "%s\n", cmd);
@@ -235,7 +253,6 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
             if (verbose) {
                 fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
                 if (err) { *err = EXECUTION_ERROR; }
-                return;
             }
         }
     }
@@ -244,7 +261,6 @@ request_command(bool verbose, bool find_only, const char *name, const char *curr
     if (verbose) {
         if (err) { *err = PROGRAM_NOT_FOUND; }
         fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
-        return;
     }
 
     if (err) { *err = PROGRAM_NOT_FOUND; }
