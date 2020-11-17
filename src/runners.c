@@ -19,7 +19,7 @@
 
 void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 	char *sdk, *toolchain;
-	int verbose, findOnly;
+	int verbose;
 	int error;
 	default_config *ourConfig;
 
@@ -72,8 +72,6 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 		}
 	}
 	verbose = va_arg(args, int);
-
-	findOnly = va_arg(args, int);
 	va_end(args);
 	requestCommand((bool) verbose, cmd, sdk, toolchain, argc, argv, &error);
 	if (err) { *err = error; }
@@ -136,12 +134,11 @@ callCommand(bool verbose, const char *cmd, const char *currentSdk, const char *c
  * @return: the program's absolute path on success, NULL on failure
  */
 char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
-	char *cmd = NULL;    /* command's absolute path */
-	char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
+	char *delimiter = ":";    /* delimiter for directories in dirs argument */
 	char **possible = NULL;
 	int pathCount = 0, i;
 	char *command = NULL;
-	cmd = (char *) malloc(PATH_MAX - 1);
+	char *cmd;
 
 	/* Get an array of all the possible places the command could be */
 	char *abslPath = strtok(dirs, delimiter);
@@ -158,7 +155,7 @@ char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
 		}
 
 		/* Construct our program's absolute path, and append it to array */
-		sprintf(cmd, "%s/%s", abslPath, name);
+		asprintf(&cmd, "%s/%s", abslPath, name);
 		possible[pathCount - 1] = cmd;
 
 		/* Move to the next entry */
@@ -178,6 +175,7 @@ char *searchCommand(bool verbose, const char *name, char *dirs, int *err) {
 			if (verbose) {
 				verbosePrintf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
 			}
+			if (err) { *err = SUCCESFUL_OPERATION; }
 			command = possible[i];
 			break;
 		}
@@ -213,8 +211,8 @@ requestCommand(bool verbose, const char *name, const char *currentSdk, const cha
 	 * /usr/bin paths, this are later separated in the searchCommand function. Since this is a memory
 	 * allocation we check if asprintf returned -1 if so we free the memory and return an error
 	 */
-	int success = asprintf(&searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developerPath, currentSdk,
-	                       currentToolchain);
+	int success = asprintf(&searchString, "%s/usr/bin:%s/usr/bin:%s/usr/bin:%s", developerPath, currentSdk,
+	                       currentToolchain, getenv("PATH"));
 	if (success == -1) {
 		if (err) { *err = ERROR_ALLOCATING_MEMORY; }
 		return;
@@ -232,7 +230,7 @@ requestCommand(bool verbose, const char *name, const char *currentSdk, const cha
 		if (err) { *err = error; }
 		return;
 	}
-
+	
 
 	/* We have searched everywhere, but we haven't found our program. State why. */
 	if (verbose) {

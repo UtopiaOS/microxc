@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
 
     int error;
-    command("clang", argc, argv, &error, NULL, NULL, 0, 0);
+    command("brew", argc, argv, &error);
 
     printf("\n%d\n", error);
     return 0;
