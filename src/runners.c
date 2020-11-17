@@ -72,9 +72,10 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 		}
 	}
 	verbose = va_arg(args, int);
+
 	findOnly = va_arg(args, int);
 	va_end(args);
-	requestCommand((bool) verbose, (bool) findOnly, cmd, sdk, toolchain, argc, argv, &error);
+	requestCommand((bool) verbose, cmd, sdk, toolchain, argc, argv, &error);
 	if (err) { *err = error; }
 
 }
