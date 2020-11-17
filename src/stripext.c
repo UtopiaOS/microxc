@@ -34,19 +34,16 @@
  */
 
 #include <string.h>
-
 #include "stripext.h"
 
 void
 stripext(char *dst, const char *src) {
-    int len;
-    char *s;
-
-    if ((s = strchr(src, '.')) != NULL) {
-        len = (int)(s - src);
-    } else {
-        len = (int)strlen(src);
-    }
-
-    strncpy(dst, src, len);
+	int len;
+	char *s;
+	if ((s = strchr(src, '.')) != NULL) {
+		len = (int) (s - src);
+	} else {
+		len = (int) strlen(src);
+	}
+	strncpy(dst, src, len);
 }

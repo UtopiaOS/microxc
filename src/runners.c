@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <dirent.h>
-
 #include "runners.h"
 #include "getters.h"
 #include "developer_path.h"
@@ -19,75 +18,64 @@
 #include "logging_printf.h"
 
 void command(const char *cmd, int argc, char *argv[], int *err, ...) {
-    char *sdk, *toolchain;
-    int verbose, find_only;
-    int error;
-    default_config *our_config;
+	char *sdk, *toolchain;
+	int verbose, find_only;
+	int error;
+	default_config *our_config;
 
-    char *developer_path;
+	char *developer_path;
+	developer_path = get_developer_path(&error);
+	if (error != SUCCESFUL_OPERATION && err) {
+		*err = error;
+		return;
+	}
+	va_list args;
+	va_start(args, err);
+	sdk = va_arg(args, char*);
 
-    developer_path = get_developer_path(&error);
-
-    if (error != SUCCESFUL_OPERATION && err) {
-        *err = error;
-        return;
-    }
-
-    va_list args;
-    va_start(args, err);
-
-    sdk = va_arg(args, char*);
-
-    /* We have an SDK, now lets call our "get_sdk_path
-     * function, if it is invalid this will return an error
-    */
-    if (sdk) {
-        sdk = get_sdk_path(developer_path, sdk, &error);
-        if (error != SUCCESFUL_OPERATION) {
-            if (err) { *err = error; }
-        }
-    } else {
-        our_config = get_default_info(&error);
-        if (error != SUCCESFUL_OPERATION && err) {
-            *err = error;
-            return;
-        }
-        sdk = get_sdk_path(developer_path, our_config->sdk, &error);
-        if (error != SUCCESFUL_OPERATION && err) {
-            *err = error;
-            return;
-        }
-    }
-
-    toolchain = va_arg(args, char*);
-
-    if (toolchain) {
-        toolchain = get_toolchain_path(developer_path, toolchain, &error);
-        if (error != SUCCESFUL_OPERATION) {
-            if (err) { *err = error; }
-        }
-    } else {
-        our_config = get_default_info(&error);
-        if (error != SUCCESFUL_OPERATION && err) {
-            *err = error;
-            return;
-        }
-        toolchain = get_toolchain_path(developer_path, our_config->toolchain, &error);
-
-        if (error != SUCCESFUL_OPERATION && err) {
-            *err = error;
-            return;
-        }
-    }
-
-
-    verbose = va_arg(args, int);
-    find_only = va_arg(args, int);
-
-    va_end(args);
-
-    request_command((bool) verbose, (bool) find_only, cmd, sdk, toolchain, argc, argv, &error);
-    if (err) { *err = error; }
+	/* We have an SDK, now lets call our "get_sdk_path
+	 * function, if it is invalid this will return an error
+	*/
+	if (sdk) {
+		sdk = get_sdk_path(developer_path, sdk, &error);
+		if (error != SUCCESFUL_OPERATION) {
+			if (err) { *err = error; }
+		}
+	} else {
+		our_config = get_default_info(&error);
+		if (error != SUCCESFUL_OPERATION && err) {
+			*err = error;
+			return;
+		}
+		sdk = get_sdk_path(developer_path, our_config->sdk, &error);
+		if (error != SUCCESFUL_OPERATION && err) {
+			*err = error;
+			return;
+		}
+	}
+	toolchain = va_arg(args, char*);
+	if (toolchain) {
+		toolchain = get_toolchain_path(developer_path, toolchain, &error);
+		if (error != SUCCESFUL_OPERATION) {
+			if (err) { *err = error; }
+		}
+	} else {
+		our_config = get_default_info(&error);
+		if (error != SUCCESFUL_OPERATION && err) {
+			*err = error;
+			return;
+		}
+		toolchain = get_toolchain_path(developer_path, our_config->toolchain, &error);
+		if (error != SUCCESFUL_OPERATION && err) {
+			*err = error;
+			return;
+		}
+	}
+	verbose = va_arg(args, int);
+	find_only = va_arg(args, int);
+	va_end(args);
+	request_command((bool) verbose, (bool) find_only, cmd, sdk, toolchain, argc, argv, &error);
+	if (err) { *err = error; }
 
 }
 
@@ -101,47 +89,43 @@ void command(const char *cmd, int argc, char *argv[], int *err, ...) {
 void
 call_command(bool verbose, const char *cmd, const char *current_sdk, const char *current_toolchain, int argc,
              char *argv[], int *err) {
-    int i;
-    char *envp[5] = {NULL};
-    int error;
+	int i;
+	char *envp[5] = {NULL};
+	int error;
 
-    char *developer_path = get_developer_path(&error);
+	char *developer_path = get_developer_path(&error);
+	if (error != SUCCESFUL_OPERATION && err) {
+		*err = error;
+		return;
+	}
 
-    if (error != SUCCESFUL_OPERATION && err) {
-        *err = error;
-        return;
-    }
+	/*
+	 * Pass SDKROOT, PATH, HOME, LD_LIBRARY_PATH, TARGET_TRIPLE, and MACOSX_DEPLOYMENT_TARGET to the called program's environment.
+	 *
+	 * > SDKROOT is used for when programs such as clang need to know the location of the sdk.
+	 * > PATH is used for when programs such as clang need to call on another program (such as the linker).
+	 * > HOME is used for recursive calls to xcrun (such as when xcrun calls a script calling xcrun ect).
+	 * > LD_LIBRARY_PATH is used for when tools needs to access libraries that are specific to the toolchain.
+	 * > TARGET_TRIPLE is used for clang/clang++ cross compilation when building on a foreign host.
+	 * > {MACOSX|IOS}_DEPLOYMENT_TARGET is used for tools like ld that need to set the minimum compatibility
+	 *   version number for a linked binary.
+	 */
 
-    /*
-     * Pass SDKROOT, PATH, HOME, LD_LIBRARY_PATH, TARGET_TRIPLE, and MACOSX_DEPLOYMENT_TARGET to the called program's environment.
-     *
-     * > SDKROOT is used for when programs such as clang need to know the location of the sdk.
-     * > PATH is used for when programs such as clang need to call on another program (such as the linker).
-     * > HOME is used for recursive calls to xcrun (such as when xcrun calls a script calling xcrun ect).
-     * > LD_LIBRARY_PATH is used for when tools needs to access libraries that are specific to the toolchain.
-     * > TARGET_TRIPLE is used for clang/clang++ cross compilation when building on a foreign host.
-     * > {MACOSX|IOS}_DEPLOYMENT_TARGET is used for tools like ld that need to set the minimum compatibility
-     *   version number for a linked binary.
-     */
-
-    asprintf(&envp[0], "SDKROOT=%s", current_sdk);
-    asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, current_toolchain, getenv("PATH"));
-    asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
-    asprintf(&envp[3], "HOME=%s", getenv("HOME"));
-
-    if (verbose) {
-        logging_printf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
-        for (i = 1; i < argc; i++)
-            logging_printf(stdout, " %s", argv[i]);
-        logging_printf(stdout, "\"\n");
-    }
-
-    if (execve(cmd, argv, envp) == -1) {
-        if (err) { *err = RUNNING_COMMAND_ERROR; }
-        return;
-    }
-
-    if (err) { *err = SUCCESFUL_OPERATION; }
+	asprintf(&envp[0], "SDKROOT=%s", current_sdk);
+	asprintf(&envp[1], "PATH=%s/usr/bin:%s/usr/bin:%s", developer_path, current_toolchain, getenv("PATH"));
+	asprintf(&envp[2], "LD_LIBRARY_PATH=%s/usr/src", current_toolchain);
+	asprintf(&envp[3], "HOME=%s", getenv("HOME"));
+	if (verbose) {
+		logging_printf(stdout, "libxcselect: info: invoking command:\n\t\"%s", cmd);
+		for (i = 1; i < argc; i++)
+			logging_printf(stdout, " %s", argv[i]);
+		logging_printf(stdout, "\"\n");
+	}
+	if (execve(cmd, argv, envp) == -1) {
+		if (err) { *err = RUNNING_COMMAND_ERROR; }
+		return;
+	}
+	if (err) { *err = SUCCESFUL_OPERATION; }
 }
 
 /**
@@ -151,61 +135,55 @@ call_command(bool verbose, const char *cmd, const char *current_sdk, const char 
  * @return: the program's absolute path on success, NULL on failure
  */
 char *search_command(bool verbose, const char *name, char *dirs, int *err) {
-    char *cmd = NULL;    /* command's absolute path */
-    char *absl_path = NULL;        /* path entry to search */
-    char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
-    char **possible = NULL;
-    int str_spaces = 0, i;
-    char *command = NULL;
+	char *cmd = NULL;    /* command's absolute path */
+	char *absl_path = NULL;        /* path entry to search */
+	char delimiter[2] = ":";    /* delimiter for directories in dirs argument */
+	char **possible = NULL;
+	int str_spaces = 0, i;
+	char *command = NULL;
+	cmd = (char *) malloc(PATH_MAX - 1);
 
-    cmd = (char *) malloc(PATH_MAX - 1);
+	/* Get an array of all the possible places the command could be */
+	absl_path = strtok(dirs, delimiter);
+	while (absl_path != NULL) {
+		possible = realloc(possible, sizeof(char *) * ++str_spaces); /* Resize our "array" */
 
-    /* Get an array of all the possible places the command could be */
-    absl_path = strtok(dirs, delimiter);
+		if (possible == NULL) {
+			if (err) { *err = ERROR_ALLOCATING_MEMORY; }
+			return NULL; /*Memory allocation failed */
+		}
+		if (verbose) {
+			verbose_printf(stderr, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path,
+			               name);
+		}
 
+		/* Construct our program's absolute path, and append it to array */
+		sprintf(cmd, "%s/%s", absl_path, name);
+		possible[str_spaces - 1] = cmd;
 
-    while (absl_path != NULL) {
+		/* Move to the next entry */
+		absl_path = strtok(NULL, delimiter);
+	}
 
-        possible = realloc(possible, sizeof(char *) * ++str_spaces); /* Resize our "array" */
+	/* Free the cmd allocation as we don't need it anymore */
+	free(cmd);
 
-        if (possible == NULL) {
-            if (err) { *err = ERROR_ALLOCATING_MEMORY; }
-            return NULL; /*Memory allocation failed */
-        }
+	/* reallocate one extra element for the last NULL */
+	possible = realloc(possible, sizeof(char *) * (str_spaces + 1));
+	possible[str_spaces] = 0;
 
-        if (verbose) {
-            verbose_printf(stderr, "libxcselect: info: checking directory \'%s\' for command \'%s\'...\n", absl_path,
-                           name);
-        }
-
-        /* Construct our program's absolute path, and append it to array */
-        sprintf(cmd, "%s/%s", absl_path, name);
-        possible[str_spaces - 1] = cmd;
-
-        /* Move to the next entry */
-        absl_path = strtok(NULL, delimiter);
-    }
-
-    /* Free the cmd allocation as we don't need it anymore */
-    free(cmd);
-
-    /* reallocate one extra element for the last NULL */
-    possible = realloc(possible, sizeof(char *) * (str_spaces + 1));
-    possible[str_spaces] = 0;
-
-    /* Iterate over the array, until we find a command that meets the criteria */
-    for (i = 0; i < (str_spaces + 1); ++i) {
-        if (access(possible[i], (F_OK | X_OK)) != (-1)) {
-            if (verbose) {
-                verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
-            }
-            command = possible[i];
-            break;
-        }
-    }
-
-    free(possible);
-    return command;
+	/* Iterate over the array, until we find a command that meets the criteria */
+	for (i = 0; i < (str_spaces + 1); ++i) {
+		if (access(possible[i], (F_OK | X_OK)) != (-1)) {
+			if (verbose) {
+				verbose_printf(stdout, "libxcselect: info: found command's absolute path: \'%s\'\n", possible[i]);
+			}
+			command = possible[i];
+			break;
+		}
+	}
+	free(possible);
+	return command;
 }
 
 /**
@@ -218,50 +196,48 @@ void
 request_command(bool verbose, bool find_only, const char *name, const char *current_sdk, const char *current_toolchain,
                 int argc,
                 char *argv[], int *err) {
-    char *cmd = NULL;    /* used to hold our command's absolute path */
-    char search_string[PATH_MAX * 1024];    /* our search string */
-    int error; /* Check if some error occurred in another function */
+	char *cmd = NULL;    /* used to hold our command's absolute path */
+	char search_string[PATH_MAX * 1024];    /* our search string */
+	int error; /* Check if some error occurred in another function */
 
-    char *developer_path = get_developer_path(&error);
-    if (error != SUCCESFUL_OPERATION) {
-        if (err) { *err = error; }
-        return;
-    }
+	char *developer_path = get_developer_path(&error);
+	if (error != SUCCESFUL_OPERATION) {
+		if (err) { *err = error; }
+		return;
+	}
+	sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
 
-    sprintf(search_string, "%s/usr/bin:%s/usr/bin:%s/usr/bin", developer_path, current_sdk, current_toolchain);
+	/* Search each path entry in search_string until we find our program. */
+	if ((cmd = search_command(verbose, name, search_string, &error)) != NULL) {
+		if (find_only) {
+			if (access(cmd, (F_OK | X_OK)) != (-1)) {
+				fprintf(stdout, "%s\n", cmd);
+				free(cmd);
+				if (err) { *err = SUCCESFUL_OPERATION; }
+				return;
+			} else {
+				if (err) { *err = PROGRAM_NOT_FOUND; }
+				free(cmd);
+				return;
+			}
+		} else {
+			call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
+			if (error != SUCCESFUL_OPERATION) {
+				if (err) { *err = error; }
+				return;
+			}
+			/* NO REACH */
+			if (verbose) {
+				fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
+				if (err) { *err = EXECUTION_ERROR; }
+			}
+		}
+	}
 
-    /* Search each path entry in search_string until we find our program. */
-    if ((cmd = search_command(verbose, name, search_string, &error)) != NULL) {
-        if (find_only) {
-            if (access(cmd, (F_OK | X_OK)) != (-1)) {
-                fprintf(stdout, "%s\n", cmd);
-                free(cmd);
-                if (err) { *err = SUCCESFUL_OPERATION; }
-                return;
-            } else {
-                if (err) { *err = PROGRAM_NOT_FOUND; }
-                free(cmd);
-                return;
-            }
-        } else {
-            call_command(verbose, cmd, current_sdk, current_toolchain, argc, argv, &error);
-            if (error != SUCCESFUL_OPERATION) {
-                if (err) { *err = error; }
-                return;
-            }
-            /* NO REACH */
-            if (verbose) {
-                fprintf(stderr, "libxcselect: error: can't exec \'%s\' (errno=%s)\n", cmd, strerror(errno));
-                if (err) { *err = EXECUTION_ERROR; }
-            }
-        }
-    }
-
-    /* We have searched everywhere, but we haven't found our program. State why. */
-    if (verbose) {
-        if (err) { *err = PROGRAM_NOT_FOUND; }
-        fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
-    }
-
-    if (err) { *err = PROGRAM_NOT_FOUND; }
+	/* We have searched everywhere, but we haven't found our program. State why. */
+	if (verbose) {
+		if (err) { *err = PROGRAM_NOT_FOUND; }
+		fprintf(stderr, "libxcselect: error: can't stat \'%s\' (errno=%s)\n", name, strerror(errno));
+	}
+	if (err) { *err = PROGRAM_NOT_FOUND; }
 }
