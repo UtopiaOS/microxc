@@ -58,3 +58,5 @@ libtool
 .libs
 XcodeSelect
 .idea/*
+
+build/*

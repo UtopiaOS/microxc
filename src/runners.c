@@ -200,7 +200,7 @@ requestCommand(bool verbose, const char *name, const char *currentSdk, const cha
 		if (err) { *err = PROGRAM_NOT_FOUND; }
 		return;
 	}
-	callCommand(verbose, cmd, currentSdk, currentToolchain, argc, argv, &error);
+	callCommand(verbose, cmd, argc, argv, &error);
 	if (error != SUCCESFUL_OPERATION) {
 		if (err) { *err = error; }
 		return;

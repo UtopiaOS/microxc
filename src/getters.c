@@ -10,7 +10,7 @@
 #include <limits.h>
 #include <plist/plist.h>
 #include <sys/stat.h>
-#include <TargetConditionals.h>
+//#include <TargetConditionals.h>
 #include "validators.h"
 #include "typedefs.h"
 #include "getters.h"
@@ -124,7 +124,7 @@ getDefaultInfo(int *err) {
 #elif TARGET_OS_MAC
 	supposedName = "MacOSX";
 #else
-	supposedName = NULL;
+	supposedName = "UtopiaOS";
 #endif
 	if (supposedName == NULL) {
 		if (err) { *err = UNSUPPORTED_PLATFORM; }
