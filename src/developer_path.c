@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include "errors.h"
 #include "developer_path.h"
 
@@ -46,6 +47,6 @@ getDeveloperPath(int *err) {
 		if (err) { *err = SUCCESFUL_OPERATION; }
 		return value;
 	}
-	if (err) { *err = UNABLE_TO_GET_DEV_PATH; }
+	if (err) { *err = UNABLE_TO_GET_DEV_PATH;}
 	return value;
 }

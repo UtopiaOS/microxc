@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
 
     int error;
-    command("brew", argc, argv, &error);
+    command("git", argc, argv, &error);
 
     printf("\n%d\n", error);
     return 0;

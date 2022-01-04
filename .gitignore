@@ -60,3 +60,4 @@ XcodeSelect
 .idea/*
 
 build/*
+.vscode/*

@@ -68,6 +68,7 @@ get_sdk_info(const char *path, int *err) {
 	 */
 
 	if (plistData == NULL) {
+		printf("here");
 		if (err) { *err = ERROR_GETTING_SDK; }
 		return NULL;
 	}
